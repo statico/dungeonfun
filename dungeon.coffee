@@ -1,3 +1,7 @@
+perlin = require './third-party/perlin.js'
+graph = require './third-party/graph.js'
+astar = require './third-party/astar.js'
+
 width = 90
 height = 40
 
@@ -7,6 +11,7 @@ TILE_EMPTY = 0
 TILE_WALL = 1
 TILE_ROOM = 2
 TILE_DOOR = 3
+TILE_HALLWAY = 6
 
 # Generate blank map
 map = []
@@ -18,7 +23,7 @@ for y in [1..height]
 
 # Generate rooms
 rooms = []
-isCollision = (tuple1, tuple2, pad = 1) ->
+roomCollision = (tuple1, tuple2, pad = 1) ->
   [t1, r1, b1, l1] = tuple1
   [t2, r2, b2, l2] = tuple2
   return false if b1 < t2 - pad
@@ -40,7 +45,7 @@ for i in [1..8]
     current = [t, r, b, l]
     ok = true
     for other in rooms
-      if isCollision current, other
+      if roomCollision current, other
         ok = false
         break
     if ok
@@ -83,6 +88,51 @@ for i in [0..rooms.length - 1]
         x = l
         y = ry
     map[y][x] = TILE_DOOR
+
+# Connect the rooms
+noise = new perlin.SimplexNoise()
+heuristic = (p1, p2) ->
+  d1 = Math.abs(p2.x - p1.x)
+  d2 = Math.abs(p2.y - p1.y)
+
+  w1 = map[p1.x][p1.y]
+  w2 = map[p2.x][p2.y]
+  if w1 == TILE_HALLWAY then w1 = 0
+  if w2 == TILE_HALLWAY then w2 = 0
+  w1 *= 1000
+  w2 *= 1000
+
+  n = noise.noise(p2.x, p2.y) * 10
+
+  return d1 + d2 + w1 + w2 + n
+
+for i in [0..rooms.length - 1]
+  j = i
+  while j == i
+    j = randInt rooms.length
+  room = rooms[i]
+  other = rooms[j]
+
+  [t, r, b, l] = room
+  for y in [t..b]
+    for x in [l..r]
+      if map[y][x] == TILE_DOOR
+        x1 = x
+        y1 = y
+
+  [t, r, b, l] = other
+  for y in [t..b]
+    for x in [l..r]
+      if map[y][x] == TILE_DOOR
+        x2 = x
+        y2 = y
+
+  g = new graph.Graph(map)
+  start = g.nodes[y1][x1]
+  end = g.nodes[y2][x2]
+  path = astar.astar.search g.nodes, start, end, heuristic
+  for p in path[0..path.length - 2]
+    map[p.x][p.y] = TILE_HALLWAY
 
 # XXX
 for row in map
