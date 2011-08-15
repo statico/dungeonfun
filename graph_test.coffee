@@ -43,14 +43,20 @@ m = [[1, 0, 1, 1, 1],
      [1, 0, 1, 0, 0],
      [1, 1, 1, 1, 1]]
 
+[WALL, GROUND] = [0, 1]
+
 g = new graph.Graph()
 for x in [0..3]
   for y in [0..2]
     g.set x, y, m[y][x]
 
 # 0's are walls, 1's are ground.
-path = g.astar(0,2, 3,0, allowed = 1)
+path = g.astar(0,2, 3,0, GROUND)
 assert.deepEqual path, [[0,2],[1,2],[2,2],[2,1],[2,0],[3,0]]
+
+# Same thing, but with diagonals.
+path = g.astar(0,2, 3,0, GROUND, null, true)
+assert.deepEqual path, [[0,2],[1,2],[2,1],[3,0]]
 
 console.log 'all tests ok'
 
