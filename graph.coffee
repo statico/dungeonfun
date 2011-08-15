@@ -93,7 +93,6 @@ class Graph
         while flags(p).parent
           ret.push(p)
           p = flags(p).parent
-        ret.push start
         return ret.reverse()
 
       # Normal case -- move current from open to closed, process each of

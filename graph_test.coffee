@@ -50,13 +50,22 @@ for x in [0..3]
   for y in [0..2]
     g.set x, y, m[y][x]
 
-# 0's are walls, 1's are ground.
+# +-----+
+# |.0***|
+# |.0*00|
+# |***..|
+# +-----+
 path = g.astar(0,2, 3,0, GROUND)
-assert.deepEqual path, [[0,2],[1,2],[2,2],[2,1],[2,0],[3,0]]
+assert.deepEqual path, [[1,2],[2,2],[2,1],[2,0],[3,0]]
 
 # Same thing, but with diagonals.
+# +-----+
+# |.0.**|
+# |.0*00|
+# |**...|
+# +-----+
 path = g.astar(0,2, 3,0, GROUND, null, true)
-assert.deepEqual path, [[0,2],[1,2],[2,1],[3,0]]
+assert.deepEqual path, [[1,2],[2,1],[3,0]]
 
 console.log 'all tests ok'
 
