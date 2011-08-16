@@ -46,7 +46,7 @@ m = [[1, 0, 1, 1, 1],
      [1, 0, 1, 0, 0],
      [1, 1, 1, 1, 1]]
 g = new graph.Graph(m)
-path = g.astar(0,2, 3,0)
+path = g.astar(0,2, 4,0)
 assert.deepEqual path, [[1,2],[2,2],[2,1],[2,0],[3,0]]
 
 # Same thing, but with diagonals.
@@ -55,7 +55,7 @@ assert.deepEqual path, [[1,2],[2,2],[2,1],[2,0],[3,0]]
 # |.X*XX|
 # |S*...|
 # +-----+
-path = g.astar(0,2, 3,0, null, null, true)
+path = g.astar(0,2, 4,0, null, null, true)
 assert.deepEqual path, [[1,2],[2,1],[3,0]]
 
 # Can only traverse values > 2
@@ -72,7 +72,7 @@ g = new graph.Graph(m)
 path = g.astar(4,2, 4,0, null, null, false)
 assert.deepEqual path, [[4,1]]
 
-filter = (value) -> value > 2
+filter = (node) -> node.value > 2
 path = g.astar(0,2, 4,0, filter, null, false)
 assert.deepEqual path, [[1,2],[2,2],[2,1],[2,0],[3,0]]
 
@@ -90,7 +90,7 @@ g = new graph.Graph(m)
 path = g.astar(4,2, 4,0, null, null, false)
 assert.deepEqual path, [[4,1]]
 
-heuristic = (p1, p2) -> g.get(p2)
+heuristic = (n1, n2) -> n1.value
 path = g.astar(4,2, 4,0, null, heuristic, false)
 assert.deepEqual path, [[3,2],[2,2],[1,2],[1,1],[1,0],[2,0],[3,0]]
 

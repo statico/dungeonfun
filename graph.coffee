@@ -67,32 +67,28 @@ class Graph
     # heuristic - a function used to decide the cost of path, defaults to Manhattan distance
     # includeDiagonals - whether the path can make use of tile corners
 
-    # Going forward, all "points" are 2-tuples of (x, y) coords.
-    start = [x1, y1]
-    end = [x2, y2]
+    # Going forward, all "points" are 2-tuples of (x, y) coords and "nodes" are
+    # objects with at least 'x' and 'y' properties. We work with nodes in this
+    # method but return a list of points.
+    nodes = {}
+    getNode = (x, y) =>
+      key = x + ',' + y
+      return nodes[key] or nodes[key] = x: x, y: y, value: @get(x, y)
+
+    start = getNode x1, y1
+    end = getNode x2, y2
 
     # Default filter allows all nonzero values in the graph.
-    filter or= (value) -> value > 0
+    filter or= (node) -> node.value > 0
 
     # Default heuristic is Manhattan distance.
-    heuristic or= (p1, p2) ->
-      d1 = Math.abs(p2[0] - p1[0])
-      d2 = Math.abs(p2[1] - p1[1])
+    heuristic or= (n1, n2) ->
+      d1 = Math.abs(n2.x - n1.x)
+      d2 = Math.abs(n2.y - n1.y)
       return d1 + d2
 
-    open = new heap.BinaryHeap()
+    open = new heap.BinaryHeap (node) -> node.f # f = heuristic + distance
     open.push start
-
-    # A stupid/simple "flags" system so that we can add attributes to coords.
-    flags = (->
-      objects = {}
-      return (p) ->
-        key = p.join ','
-        obj = objects[key]
-        if obj == undefined
-          obj = objects[key] = {}
-        return obj
-    )()
 
     while open.size() > 0
 
@@ -100,23 +96,22 @@ class Graph
       current = open.pop()
 
       # End case -- result has been found, return the traced path
-      if current[0] == end[0] and current[1] == end[1]
-        p = current
+      if current == end
+        n = current
         ret = []
-        while flags(p).parent
-          ret.push(p)
-          p = flags(p).parent
+        while n.parent
+          ret.push([n.x, n.y]) if n != end # Conditional cures an edge case..
+          n = n.parent
         return ret.reverse()
 
       # Normal case -- move current from open to closed, process each of
       # its neighbors
-      flags(current).closed = true
+      current.closed = true
 
-      for p in @neighbors(current[0], current[1], includeDiagonals)
-        value = @getPoint(p)
-        f = flags(p)
+      for p in @neighbors(current.x, current.y, includeDiagonals)
+        neighbor = getNode p[0], p[1]
 
-        if f.closed or not filter(value)
+        if neighbor.closed or not filter(neighbor)
           # not a valid node to process, skip to next neighbor
           continue
 
@@ -124,25 +119,25 @@ class Graph
         # check if the path we have arrived at this neighbor is the shortest one
         # we have seen yet 1 is the distance from a node to it's neighbor.  This
         # could be variable for weighted paths.
-        gScore = (f.g or 0) + 1
-        beenVisited = f.visited
+        gScore = (current.g or 0) + 1
+        beenVisited = neighbor.visited
 
-        if not beenVisited or gScore < (f.g or 0)
+        if not beenVisited or gScore < (neighbor.g or 0)
           # Found an optimal (so far) path to this node.  Take score for node to
           # see how good it is.
-          f.visited = true
-          f.parent = current
-          f.h or= heuristic(p, end)
-          f.g = gScore
-          f.f = f.g + f.h
+          neighbor.visited = true
+          neighbor.parent = current
+          neighbor.h or= heuristic(neighbor, end)
+          neighbor.g = gScore
+          neighbor.f = neighbor.g + neighbor.h
 
           if not beenVisited
             # Pushing to heap will put it in proper place based on the 'f' value.
-            open.push p
+            open.push neighbor
           else
             # Already seen the node, but since it has been rescored we need to
             # reorder it in the heap
-            open.rescoreElement p
+            open.rescoreElement neighbor
 
     # No result was found -- empty array signifies failure to find path
     return []
