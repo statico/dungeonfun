@@ -87,21 +87,13 @@ noise = new perlin.SimplexNoise random: -> 0.123 # Seed the noise.
 heuristic = (p1, p2) ->
   d1 = Math.abs(p2.x - p1.x)
   d2 = Math.abs(p2.y - p1.y)
+  n = Math.floor noise.noise(p1.x / 15, p1.y / 15) * 20
+  return d1 + d2 + n
+filter = (node) ->
+  #map.set node.x, node.y, 5 if !node.value
+  !node.value or node.value == TILE_EMPTY or node.value == TILE_DOOR
 
-  w1 = map.get(p1.x, p1.y)
-  w2 = map.get(p2.x, p2.y)
-  if w1 == TILE_HALLWAY then w1 = 0
-  if w2 == TILE_HALLWAY then w2 = 0
-  w1 *= 1000
-  w2 *= 1000
-
-  n = d1 + d2 + noise.noise(p2.x, p2.y) * 1000
-
-  return d1 + d2 * 2
-  return d1 + d2 + w1 + w2 + n
-
-#for i in [0..rooms.length - 1]
-for i in [0]
+for i in [0..rooms.length - 1]
   j = i
   while j == i
     j = randInt rooms.length
@@ -122,10 +114,7 @@ for i in [0]
         x2 = x
         y2 = y
 
-  filter = (node) ->
-    map.set node.x, node.y, 5 if !node.value
-    !node.value or node.value == TILE_EMPTY or node.value == TILE_DOOR
-  path = map.astar x1, y1, x2, y2, filter
+  path = map.astar x1, y1, x2, y2, filter, heuristic
   for p in path
     map.setPoint p, TILE_HALLWAY
 
