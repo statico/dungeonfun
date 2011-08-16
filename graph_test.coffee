@@ -14,11 +14,13 @@ assert.equal g.get(1, 1), 44
 assert.equal g.get(99, 99), 0
 assert.equal g.get(-1, -1), 0
 
-assert.equal g.getPoint([0, 0]), 11
-assert.equal g.getPoint([1, 0]), 22
-
 assert.deepEqual g.getRect(0, 0, 2, 2), [[11, 22], [33, 44]]
 assert.deepEqual g.getRect(-1, -1, 2, 2), [[0, 0], [0, 11]]
+
+g.setPoint([0, 0], 55)
+g.setPoint([1, 1], 66)
+assert.equal g.getPoint([0, 0]), 55
+assert.equal g.getPoint([1, 1]), 66
 
 # Neighbors with diagonals.
 neighbors = (p.join(',') for p in g.neighbors(0, 0))
@@ -102,6 +104,12 @@ m = [[1, 1, 0, 1, 1]]
 g = new graph.Graph(m)
 path = g.astar(0,0, 4,0)
 assert.deepEqual path, []
+
+# A really long path
+m = [[1..100000]]
+g = new graph.Graph(m)
+path = g.astar(0,0, 99999,0)
+assert.equal path.length, 99998
 
 console.log 'all tests ok'
 

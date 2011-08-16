@@ -29,6 +29,9 @@ class Graph
       a = @map[x] = {}
     a[y] = value
 
+  setPoint: (p, value) ->
+    @set p[0], p[1], value
+
   getRect: (x, y, w, h) ->
     result = []
     for k in [y..y+h-1]

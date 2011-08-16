@@ -12,7 +12,8 @@ TILE_ROOM = 2
 TILE_DOOR = 3
 TILE_HALLWAY = 6
 
-g = graph.Graph()
+map = new graph.Graph()
+map.debug = true
 
 # Generate rooms
 rooms = []
@@ -52,15 +53,15 @@ for i in [0..rooms.length - 1]
   # Draw the room.
   for y in [t..b]
     for x in [l..r]
-      g.set(x, y) = TILE_ROOM
+      map.set x, y, TILE_ROOM
 
   # Draw the perimeter.
   for x in [l..r]
-    map[t][x] = TILE_WALL
-    map[b][x] = TILE_WALL
+    map.set x, t, TILE_WALL
+    map.set x, b, TILE_WALL
   for y in [t+1..b-1]
-    map[y][l] = TILE_WALL
-    map[y][r] = TILE_WALL
+    map.set l, y, TILE_WALL
+    map.set r, y, TILE_WALL
 
   # Add at least two doors.
   count = 2 + randInt (r-l) * 2 / 10
@@ -80,16 +81,17 @@ for i in [0..rooms.length - 1]
       when 3 # left
         x = l
         y = ry
-    map[y][x] = TILE_DOOR
+    map.set x, y, TILE_DOOR
 
 # Connect the rooms
-noise = new perlin.SimplexNoise()
+filter = (node) -> !node.value
+noise = new perlin.SimplexNoise random: -> 0.123 # Seed the noise.
 heuristic = (p1, p2) ->
   d1 = Math.abs(p2.x - p1.x)
   d2 = Math.abs(p2.y - p1.y)
 
-  w1 = map[p1.x][p1.y]
-  w2 = map[p2.x][p2.y]
+  w1 = map.get(p1.x, p1.y)
+  w2 = map.get(p2.x, p2.y)
   if w1 == TILE_HALLWAY then w1 = 0
   if w2 == TILE_HALLWAY then w2 = 0
   w1 *= 1000
@@ -109,26 +111,24 @@ for i in [0..rooms.length - 1]
   [t, r, b, l] = room
   for y in [t..b]
     for x in [l..r]
-      if map[y][x] == TILE_DOOR
+      if map.get(x, y) == TILE_DOOR
         x1 = x
         y1 = y
 
   [t, r, b, l] = other
   for y in [t..b]
     for x in [l..r]
-      if map[y][x] == TILE_DOOR
+      if map.get(x, y) == TILE_DOOR
         x2 = x
         y2 = y
 
-  g = new graph.Graph(map)
-  start = g.nodes[y1][x1]
-  end = g.nodes[y2][x2]
-  path = astar.astar.search g.nodes, start, end, heuristic
-  for p in path[0..path.length - 2]
-    map[p.x][p.y] = TILE_HALLWAY
+  path = map.astar x1, y1, x2, y2, filter
+  console.log x1, y1, x2, y2, path
+  for p in path
+    map.setPoint p, TILE_HALLWAY
 
 # XXX
-for row in map
+for row in map.getRect 0,0, width,height
   line = row.join('')
   line = line.replace(/0/g, '.')
   line = line.replace(/(\d)/g, "\x1b[3$1m$1\x1b[0m")
