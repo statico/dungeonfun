@@ -9,6 +9,7 @@ heap = require('./heap.coffee')
 class Graph
 
   constructor: (initial = null) ->
+    @MAX_HEAP_SIZE = 500
     @map = {}
 
     if initial
@@ -93,7 +94,7 @@ class Graph
     open = new heap.BinaryHeap (node) -> node.f # f = heuristic + distance
     open.push start
 
-    while open.size() > 0
+    while open.size() > 0 and open.size() < @MAX_HEAP_SIZE
 
       # Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
       current = open.pop()

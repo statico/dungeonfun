@@ -13,7 +13,6 @@ TILE_DOOR = 3
 TILE_HALLWAY = 6
 
 map = new graph.Graph()
-map.debug = true
 
 # Generate rooms
 rooms = []
@@ -84,7 +83,6 @@ for i in [0..rooms.length - 1]
     map.set x, y, TILE_DOOR
 
 # Connect the rooms
-filter = (node) -> !node.value
 noise = new perlin.SimplexNoise random: -> 0.123 # Seed the noise.
 heuristic = (p1, p2) ->
   d1 = Math.abs(p2.x - p1.x)
@@ -97,11 +95,13 @@ heuristic = (p1, p2) ->
   w1 *= 1000
   w2 *= 1000
 
-  n = noise.noise(p2.x, p2.y) * 10
+  n = d1 + d2 + noise.noise(p2.x, p2.y) * 1000
 
+  return d1 + d2 * 2
   return d1 + d2 + w1 + w2 + n
 
-for i in [0..rooms.length - 1]
+#for i in [0..rooms.length - 1]
+for i in [0]
   j = i
   while j == i
     j = randInt rooms.length
@@ -122,8 +122,10 @@ for i in [0..rooms.length - 1]
         x2 = x
         y2 = y
 
+  filter = (node) ->
+    map.set node.x, node.y, 5 if !node.value
+    !node.value or node.value == TILE_EMPTY or node.value == TILE_DOOR
   path = map.astar x1, y1, x2, y2, filter
-  console.log x1, y1, x2, y2, path
   for p in path
     map.setPoint p, TILE_HALLWAY
 
