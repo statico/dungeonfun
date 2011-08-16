@@ -8,11 +8,20 @@ heap = require('./heap.coffee')
 
 class Graph
 
-  constructor: ->
+  constructor: (initial = null) ->
     @map = {}
+
+    if initial
+      for y in [0..initial.length - 1]
+        row = initial[y]
+        for x in [0..row.length - 1]
+          @set x, y, initial[y][x]
 
   get: (x, y) ->
     return @map[x]?[y] or 0
+
+  getPoint: (p) ->
+    return @get(p[0], p[1])
 
   set: (x, y, value) ->
     a = @map[x]
@@ -51,10 +60,10 @@ class Graph
         [x,     y + 1],
       ]
 
-  astar: (x1, y1, x2, y2, mask = 0, heuristic = null, includeDiagonals = false) ->
+  astar: (x1, y1, x2, y2, filter = null, heuristic = null, includeDiagonals = false) ->
     # x1, y1 - starting point
     # x2, y2 - endoing point
-    # mask - a bitmask of OK things to traverse
+    # filter - a function(x) which given a cell returns whether it can be traversed
     # heuristic - a function used to decide the cost of path, defaults to Manhattan distance
     # includeDiagonals - whether the path can make use of tile corners
 
@@ -62,6 +71,10 @@ class Graph
     start = [x1, y1]
     end = [x2, y2]
 
+    # Default filter allows all nonzero values in the graph.
+    filter or= (value) -> value > 0
+
+    # Default heuristic is Manhattan distance.
     heuristic or= (p1, p2) ->
       d1 = Math.abs(p2[0] - p1[0])
       d2 = Math.abs(p2[1] - p1[1])
@@ -100,10 +113,10 @@ class Graph
       flags(current).closed = true
 
       for p in @neighbors(current[0], current[1], includeDiagonals)
-        value = @get(p[0], p[1])
+        value = @getPoint(p)
         f = flags(p)
 
-        if f.closed or (mask and not value & mask)
+        if f.closed or not filter(value)
           # not a valid node to process, skip to next neighbor
           continue
 

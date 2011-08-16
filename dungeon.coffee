@@ -1,6 +1,5 @@
 perlin = require './third-party/perlin.js'
-graph = require './third-party/graph.js'
-astar = require './third-party/astar.js'
+graph = require './graph.coffee'
 
 width = 90
 height = 40
@@ -13,13 +12,7 @@ TILE_ROOM = 2
 TILE_DOOR = 3
 TILE_HALLWAY = 6
 
-# Generate blank map
-map = []
-for y in [1..height]
-  row = []
-  for x in [1..width]
-    row.push TILE_EMPTY
-  map.push row
+g = graph.Graph()
 
 # Generate rooms
 rooms = []
@@ -31,7 +24,6 @@ roomCollision = (tuple1, tuple2, pad = 1) ->
   return false if r1 < l2 - pad
   return false if l1 > r2 + pad
   return true
-
 for i in [1..8]
   while true
     l = randInt width
@@ -52,6 +44,7 @@ for i in [1..8]
       rooms.push current
       break
 
+# Connect all the rooms.
 for i in [0..rooms.length - 1]
   room = rooms[i]
   [t, r, b, l] = room
@@ -59,7 +52,7 @@ for i in [0..rooms.length - 1]
   # Draw the room.
   for y in [t..b]
     for x in [l..r]
-      map[y][x] = TILE_ROOM
+      g.set(x, y) = TILE_ROOM
 
   # Draw the perimeter.
   for x in [l..r]
