@@ -3,6 +3,7 @@ world = require('./world.coffee')
 w = new world.World()
 w.makeTile 0, 0
 w.makeTile 1, 0
+w.connectTiles 0,0, 1,0
 
 t1 = w.getTile 0, 0
 t2 = w.getTile 1, 0

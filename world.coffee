@@ -1,5 +1,6 @@
 perlin = require './third-party/perlin.js'
 graph = require './graph.coffee'
+heap = require './heap.coffee'
 
 randInt = (x) -> Math.floor(Math.random() * x)
 
@@ -15,16 +16,16 @@ class World
   constructor: ->
     @map = new graph.Graph()
 
-  getTile: (tX, tY) ->
-    l = tX * @TILE_SIZE
-    t = tY * @TILE_SIZE
+  getTile: (tx, ty) ->
+    l = tx * @TILE_SIZE
+    t = ty * @TILE_SIZE
     return @map.getRect(l, t, @TILE_SIZE, @TILE_SIZE)
 
-  makeTile: (tX, tY) ->
-    l = tX * @TILE_SIZE
-    r = (tX + 1) * @TILE_SIZE
-    t = tY * @TILE_SIZE
-    b = (tY + 1) * @TILE_SIZE
+  makeTile: (tx, ty) ->
+    l = tx * @TILE_SIZE
+    r = (tx + 1) * @TILE_SIZE
+    t = ty * @TILE_SIZE
+    b = (ty + 1) * @TILE_SIZE
 
     rooms = @makeRooms(t, r, b, l)
     @makeHallways(t, r, b, l, rooms)
@@ -177,6 +178,79 @@ class World
       #@map.set x1, y1, 8
       #@map.set x2, y2, 9
 
+  connectTiles: (tx1, ty1, tx2, ty2) ->
+    # Basic algorithm: Find the edge (1=top, 2=right, 3=bottom, 4=left) on
+    # which the tiles connect. Then search backward from the seam on both tiles
+    # finding the first row/column containing a door or hallway. Then find the
+    # two points on each row/column that are closest and find a path between
+    # them.
+    S = @TILE_SIZE
+    PADDING = 10
+
+    # Tiles must be adjacent (at the moment).
+    if (tx2 - tx1) + (ty2 - ty1) != 1
+      console.warn 'Tried to connect to non-adjacent tiles'
+      return
+
+    # Determine the edge direction relative to the first tile.
+    dir = 1 if ty1 > ty2
+    dir = 2 if tx1 < tx2
+    dir = 3 if ty1 < ty2
+    dir = 4 if tx1 > tx2
+
+    # Find the row/column with one or more hallways or doors on each tile.
+    #
+    # This row/column needs to be at least N cells away (Manhattan distance),
+    # otherwise there's a large chance that one tile has hallways that bleed on
+    # another and we're not actually joining the tiles. There's still a small
+    # chance, however, that the tiles won't be connected.
+    if dir == 2
+      # T1 column, right to left
+      for x in [(tx1 * S + S - 1 - PADDING)..(tx1 * S)]
+        points = []
+        for y in [(ty1 * S)..(ty1 * S + S)]
+          value = @map.get x, y
+          if value == @CELL_HALLWAY or value == @CELL_DOOR
+            #@map.set x, y, 5
+            points.push [x, y]
+        break if points.length
+      t1p = points
+
+      # T2 column, left to right
+      for x in [(tx2 * S + PADDING)..(tx2 * S + S)]
+        points = []
+        for y in [(ty1 * S)..(ty1 * S + S)]
+          value = @map.get x, y
+          if value == @CELL_HALLWAY or value == @CELL_DOOR
+            #@map.set x, y, 5
+            points.push [x, y]
+        break if points.length
+      t2p = points
+
+      # Pick a random point on T1 and the closest point to it on T2.
+      p1 = t1p[randInt t1p.length]
+      choices = new heap.BinaryHeap (obj) -> (obj.distance)
+      for p2 in t2p
+        choices.push
+          x: p2[0]
+          y: p2[1]
+          distance: (p2[0] - p1[0]) + (p2[1] - p1[1])
+      obj = choices.pop()
+      p2 = [obj.x, obj.y]
+
+      if not p1?.length or not p2?.length
+        console.warn 'Could not join tiles', tx1, ty1, tx2, ty2
+        return
+
+      # Join them.
+      filter = (node) =>
+        x = node.value
+        return (!x or x == @CELL_EMPTY or x == @CELL_DOOR or x == @CELL_HALLWAY)
+      path = @map.astar p1[0], p1[1], p2[0], p2[1], filter
+      for p in path
+        @map.setPoint p, @CELL_HALLWAY
+      #@map.setPoint p1, 7
+      #@map.setPoint p2, 7
 
 
 
