@@ -63,7 +63,6 @@ class World
           rooms.push current
           break
 
-    # Connect all the rooms.
     for i in [0..rooms.length - 1]
       room = rooms[i]
       [t, r, b, l] = room
@@ -81,8 +80,8 @@ class World
         @map.set l, y, @CELL_WALL
         @map.set r, y, @CELL_WALL
 
-      # Add at least two doors.
-      count = 2 + randInt (r-l) * 2 / 10
+      # Add at least one door.
+      count = 1 + randInt (r-l) * 2 / 10
       for [1..count]
         rx = l + 1 + randInt(r - l - 1)
         ry = t + 1 + randInt(b - t - 1)
@@ -109,14 +108,18 @@ class World
     noise = new perlin.SimplexNoise random: -> 0.123 # Seed the noise.
 
     heuristic = (p1, p2) =>
-      d1 = Math.abs(p2.x - p1.x)
-      d2 = Math.abs(p2.y - p1.y)
-      n = Math.floor noise.noise(p1.x / 15, p1.y / 15) * 20
-      return d1 + d2 + n
+      if p2.value == @CELL_HALLWAY
+        return 0 # Bonus to reuse hallways.
+      else
+        d1 = Math.abs(p2.x - p1.x)
+        d2 = Math.abs(p2.y - p1.y)
+        n = Math.floor noise.noise(p1.x / 15, p1.y / 15) * 20
+        return d1 + d2 + n
 
     filter = (node) =>
       #@map.set node.x, node.y, 5 if !node.value
-      !node.value or node.value == @CELL_EMPTY or node.value == @CELL_DOOR
+      x = node.value
+      return (!x or x == @CELL_EMPTY or x == @CELL_DOOR or x == @CELL_HALLWAY)
 
     findDoors = (room) =>
       [t, r, b, l] = room
@@ -126,24 +129,35 @@ class World
           doors.push [x, t]
         if @map.get(x, b) == @CELL_DOOR # bottom wall
           doors.push [x, b]
-      for y in [t+1..b-1]
+      for y in [t..b]
         if @map.get(l, y) == @CELL_DOOR # left wall
           doors.push [l, y]
         if @map.get(r, y) == @CELL_DOOR # right wall
           doors.push [r, y]
       return doors
 
+    # Connect each room with one other.
     for i in [0..rooms.length - 1]
+
+      # Pick another room at random.
       j = i
       while j == i
         j = randInt rooms.length
       room = rooms[i]
       other = rooms[j]
 
-      [x1, y1] = findDoors(room)?[0]
-      [x2, y2] = findDoors(other)?[0]
+      a = findDoors(room)
+      b = findDoors(other)
+      continue if not a.length or not b.length
+      [x1, y1] = a[0]
+      [x2, y2] = b[0]
 
       path = @map.astar x1, y1, x2, y2, filter, heuristic
+      if not path.length
+        console.log i, j, x1, y1, x2, y2, path
+        @map.set x1, y1, 5
+        @map.set x2, y2, 5
+        return
       for p in path
         @map.setPoint p, @CELL_HALLWAY
 
