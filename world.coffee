@@ -5,7 +5,7 @@ randInt = (x) -> Math.floor(Math.random() * x)
 
 class World
 
-  TILESIZE: 50
+  TILE_SIZE: 50
   CELL_EMPTY: 0
   CELL_WALL: 1
   CELL_ROOM: 2
@@ -16,15 +16,15 @@ class World
     @map = new graph.Graph()
 
   getTile: (tX, tY) ->
-    l = tX * @TILESIZE
-    t = tY * @TILESIZE
-    return @map.getRect(l, t, @TILESIZE, @TILESIZE)
+    l = tX * @TILE_SIZE
+    t = tY * @TILE_SIZE
+    return @map.getRect(l, t, @TILE_SIZE, @TILE_SIZE)
 
   makeTile: (tX, tY) ->
-    l = tX * @TILESIZE
-    r = (tX + 1) * @TILESIZE
-    t = tY * @TILESIZE
-    b = (tY + 1) * @TILESIZE
+    l = tX * @TILE_SIZE
+    r = (tX + 1) * @TILE_SIZE
+    t = tY * @TILE_SIZE
+    b = (tY + 1) * @TILE_SIZE
 
     rooms = @makeRooms(t, r, b, l)
     @makeHallways(t, r, b, l, rooms)
@@ -42,7 +42,7 @@ class World
       return true
 
     # Pick a reasonable number of rooms for the tile.
-    for i in [1..Math.floor(@TILESIZE * @TILESIZE / 300)]
+    for i in [1..Math.floor(@TILE_SIZE * @TILE_SIZE / 300)]
 
       while true
         l = L + randInt (R - L)
@@ -137,6 +137,7 @@ class World
       return doors
 
     # Connect each room with one other.
+    hallwayPoints = []
     for i in [0..rooms.length - 1]
 
       # Pick another room at random.
@@ -153,13 +154,30 @@ class World
       [x2, y2] = b[0]
 
       path = @map.astar x1, y1, x2, y2, filter, heuristic
-      if not path.length
-        console.log i, j, x1, y1, x2, y2, path
-        @map.set x1, y1, 5
-        @map.set x2, y2, 5
-        return
       for p in path
         @map.setPoint p, @CELL_HALLWAY
+        hallwayPoints.push p
+
+    # Pick some random parts of a hallway and make branches to nowhere.
+    for i in [1..Math.floor(@TILE_SIZE * @TILE_SIZE / 600)]
+      [x1, y1] = hallwayPoints[randInt hallwayPoints.length]
+
+      x2 = undefined
+      r = Math.floor(@TILE_SIZE * .2)
+      while !x2
+        x = x1 - r + randInt(r * 2)
+        y = y1 - r + randInt(r * 2)
+        if !@map.get(x, y)
+          x2 = x
+          y2 = y
+
+      path = @map.astar x1, y1, x2, y2, filter, heuristic
+      for p in path
+        @map.setPoint p, @CELL_HALLWAY
+      #@map.set x1, y1, 8
+      #@map.set x2, y2, 9
+
+
 
 
 exports or= this
