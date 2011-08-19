@@ -16,7 +16,9 @@ format = (row) ->
   line = line.replace(/(\d)/g, "\x1b[3$1m$1\x1b[0m")
   return line
 
-app = express.createServer ->
+app = express.createServer()
+
+app.configure ->
   app.use express.logger()
   app.use express.methodOverride()
   app.use express.bodyParser()
@@ -35,6 +37,7 @@ app.set 'view options',
 
 app.get '/', (req, res) ->
   res.render 'index.jade',
+    title: 'hello'
     message: 'world'
 
 io = socketio.listen app
