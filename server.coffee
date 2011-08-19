@@ -45,7 +45,7 @@ app.get '/', (req, res) ->
 
 io = socketio.listen app
 io.sockets.on 'connection', (socket) ->
-  conosle.info 'client connected', socket
+  console.info 'client connected'
 
 port = process.env.PORT or 3000
 console.info "Listening on http://127.0.0.1:#{port}/"

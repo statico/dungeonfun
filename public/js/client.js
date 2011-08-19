@@ -1,5 +1,6 @@
 (function() {
   $(function() {
-    return $(document.body).append('<p>ok</p>');
+    var socket;
+    return socket = io.connect('/');
   });
 }).call(this);

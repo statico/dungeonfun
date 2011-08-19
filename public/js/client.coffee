@@ -1,2 +1,2 @@
 $ ->
-  $(document.body).append '<p>ok</p>'
+  socket = io.connect '/'
