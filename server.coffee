@@ -1,5 +1,5 @@
 express = require 'express'
-world = require './static/js/world.coffee'
+world = require './public/js/world.coffee'
 socketio = require 'socket.io'
 
 w = new world.World()
@@ -26,7 +26,10 @@ app.configure ->
   app.use express.session
     secret: 'b35$6dff0YC1694421##2a4$9)CE!bc0'
   app.use app.router
-  app.use express.static __dirname + '/static'
+  app.use express.compiler
+    src: __dirname + '/public'
+    enable: ['sass', 'coffeescript']
+  app.use express.static __dirname + '/public'
   app.use express.errorHandler
     dumpExceptions: true
     showStack: true
