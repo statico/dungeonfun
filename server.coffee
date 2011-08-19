@@ -39,7 +39,7 @@ app.set 'view options',
   layout: false
 
 app.get '/', (req, res) ->
-  res.render 'index.jade',
+  res.render 'main.jade',
     title: 'hello'
     message: 'world'
 
