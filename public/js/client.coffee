@@ -107,9 +107,9 @@ $ ->
   socket.on 'playerUpdate', onUpdate
   socket.on 'newPlayer', onUpdate
 
-  socket.emit 'getTile', {x: 0, y: 0}
-  socket.emit 'getTile', {x: 1, y: 0}
-
+  socket.on 'removePlayer', (p) ->
+    delete players[p.id]
+    fullRedraw()
 
   $(document).bind 'keydown', (e) ->
     switch String.fromCharCode(e.which)
@@ -125,3 +125,7 @@ $ ->
       return false
 
   log 'welcome'
+  socket.emit 'getTile', {x: 0, y: 0}
+  socket.emit 'getTile', {x: 1, y: 0}
+
+

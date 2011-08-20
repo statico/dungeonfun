@@ -71,6 +71,7 @@ io.sockets.on 'connection', (socket) ->
     log 'Disconnected:', player
     socket.broadcast.emit 'removePlayer', player
     delete players[player.id]
+    p.clear player.x, player.y
 
   socket.on 'movePlayer', (data) ->
     directions =

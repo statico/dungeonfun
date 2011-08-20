@@ -126,13 +126,9 @@
     };
     socket.on('playerUpdate', onUpdate);
     socket.on('newPlayer', onUpdate);
-    socket.emit('getTile', {
-      x: 0,
-      y: 0
-    });
-    socket.emit('getTile', {
-      x: 1,
-      y: 0
+    socket.on('removePlayer', function(p) {
+      delete players[p.id];
+      return fullRedraw();
     });
     $(document).bind('keydown', function(e) {
       switch (String.fromCharCode(e.which)) {
@@ -180,6 +176,14 @@
         return false;
       }
     });
-    return log('welcome');
+    log('welcome');
+    socket.emit('getTile', {
+      x: 0,
+      y: 0
+    });
+    return socket.emit('getTile', {
+      x: 1,
+      y: 0
+    });
   });
 }).call(this);
