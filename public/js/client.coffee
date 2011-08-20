@@ -1,27 +1,43 @@
 log = () -> console?.log?(Array.prototype.slice.call(arguments))
 str = (x) -> JSON.stringify x
 
+SPRITE_SIZE = 16 # pixels
+SPRITE_BG = '#476c6c'
+spritemap = new Image()
+spritemap.src = '/images/nhtiles.png'
+
+CELL_WIDTH = 16
+CELL_HEIGHT = 16
+
+class Viewport
+
+  constructor: (@canvas) ->
+    @set 10, 10
+
+  set: (x, y) ->
+    @l = x
+    @t = y
+    @r = x + Math.floor(@canvas.width / CELL_WIDTH) + 1
+    @b = y + Math.floor(@canvas.height / CELL_HEIGHT) + 1
+
+  xToCanvasX: (x) ->
+    return (x - @l) * CELL_WIDTH
+
+  yToCanvasY: (y) ->
+    return (y - @t) * CELL_HEIGHT
+
 $ ->
   body = $(document.body)
-
-  SPRITE_SIZE = 16 # pixels
-  SPRITE_BG = '#476c6c'
-  spritemap = new Image()
-  spritemap.src = '/images/nhtiles.png'
-
-  CELL_WIDTH = 16
-  CELL_HEIGHT = 16
 
   body.css overflow: 'hidden'
   canvas = document.getElementById('canvas')
   canvas.width = document.width
   canvas.height = document.height
-  canvasW = canvas.width
-  canvasH = canvas.height
   ctx = canvas.getContext?('2d')
   ctx.fillStyle = 'black'
-  ctx.fillRect 0, 0, canvasW, canvasH
+  ctx.fillRect 0, 0, canvas.width, canvas.height
 
+  v = new Viewport(canvas)
   w = new World()
 
   p = new Graph()
@@ -31,8 +47,8 @@ $ ->
     S = SPRITE_SIZE
     ctx.drawImage spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT
 
-  drawCell = (vx, vy, dx, dy) ->
-    value = w.map.get vx, vy
+  drawCell = (x, y, dx, dy) ->
+    value = w.map.get x, y
 
     # Determine sprite coords
     W = w.CELL_WALL
@@ -40,7 +56,7 @@ $ ->
       when W
         sy = 20
         # Neighbors array: top, left, right, bottom.
-        n = (x == W for x in w.map.neighbors(vx, vy, false))
+        n = (i == W for i in w.map.neighbors(x, y, false))
         if n[0] and n[1] and n[2] and n[3] # surrounded
           sx = 34
         else if n[0] and n[3] # vertical wall
@@ -67,32 +83,22 @@ $ ->
 
   fullRedraw = ->
 
-    # Viewport map offsets (todo later)
-    vl = 0
-    vt = 0
-    vr = canvasW / CELL_WIDTH + 1
-    vb = canvasH / CELL_HEIGHT + 1
-
-    for vx in [vl..vr]
-      for vy in [vt..vb]
+    for x in [v.l..v.r]
+      for y in [v.t..v.b]
         # Destination canvas pixel coords
-        dx = (vx - vl) * CELL_WIDTH
-        dy = (vy - vt) * CELL_HEIGHT
-        drawCell vx, vy, dx, dy
+        dx = (x - v.l) * CELL_WIDTH
+        dy = (y - v.t) * CELL_HEIGHT
+        drawCell x, y, dx, dy
 
     for pid, p of players
       drawPlayer(p)
 
   drawPlayer = (p, oldx = null, oldy = null) ->
-    dx = p.x * CELL_WIDTH
-    dy = p.y * CELL_HEIGHT
     # Sprite is a random character based on ID.
-    drawSprite 15 + (p.id % 14), 8, dx, dy
+    drawSprite 15 + (p.id % 14), 8, v.xToCanvasX(p.x), v.yToCanvasY(p.y)
 
     if oldx != null and oldy != null
-      dx = oldx * CELL_WIDTH
-      dy = oldy * CELL_HEIGHT
-      drawCell(oldx, oldy, dx, dy)
+      drawCell oldx, oldy, v.xToCanvasX(oldx), v.yToCanvasY(oldy)
 
   socket = io.connect '/'
 

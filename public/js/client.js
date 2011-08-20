@@ -1,31 +1,49 @@
 (function() {
-  var log, str;
+  var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, Viewport, log, spritemap, str;
   log = function() {
     return typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log(Array.prototype.slice.call(arguments)) : void 0 : void 0;
   };
   str = function(x) {
     return JSON.stringify(x);
   };
+  SPRITE_SIZE = 16;
+  SPRITE_BG = '#476c6c';
+  spritemap = new Image();
+  spritemap.src = '/images/nhtiles.png';
+  CELL_WIDTH = 16;
+  CELL_HEIGHT = 16;
+  Viewport = (function() {
+    function Viewport(canvas) {
+      this.canvas = canvas;
+      this.set(10, 10);
+    }
+    Viewport.prototype.set = function(x, y) {
+      this.l = x;
+      this.t = y;
+      this.r = x + Math.floor(this.canvas.width / CELL_WIDTH) + 1;
+      return this.b = y + Math.floor(this.canvas.height / CELL_HEIGHT) + 1;
+    };
+    Viewport.prototype.xToCanvasX = function(x) {
+      return (x - this.l) * CELL_WIDTH;
+    };
+    Viewport.prototype.yToCanvasY = function(y) {
+      return (y - this.t) * CELL_HEIGHT;
+    };
+    return Viewport;
+  })();
   $(function() {
-    var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, body, canvas, canvasH, canvasW, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, onUpdate, p, players, socket, spritemap, w;
+    var body, canvas, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, onUpdate, p, players, socket, v, w;
     body = $(document.body);
-    SPRITE_SIZE = 16;
-    SPRITE_BG = '#476c6c';
-    spritemap = new Image();
-    spritemap.src = '/images/nhtiles.png';
-    CELL_WIDTH = 16;
-    CELL_HEIGHT = 16;
     body.css({
       overflow: 'hidden'
     });
     canvas = document.getElementById('canvas');
     canvas.width = document.width;
     canvas.height = document.height;
-    canvasW = canvas.width;
-    canvasH = canvas.height;
     ctx = typeof canvas.getContext === "function" ? canvas.getContext('2d') : void 0;
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    v = new Viewport(canvas);
     w = new World();
     p = new Graph();
     players = {};
@@ -34,20 +52,20 @@
       S = SPRITE_SIZE;
       return ctx.drawImage(spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT);
     };
-    drawCell = function(vx, vy, dx, dy) {
-      var W, n, sx, sy, value, x;
-      value = w.map.get(vx, vy);
+    drawCell = function(x, y, dx, dy) {
+      var W, i, n, sx, sy, value;
+      value = w.map.get(x, y);
       W = w.CELL_WALL;
       switch (value) {
         case W:
           sy = 20;
           n = (function() {
             var _i, _len, _ref, _results;
-            _ref = w.map.neighbors(vx, vy, false);
+            _ref = w.map.neighbors(x, y, false);
             _results = [];
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              x = _ref[_i];
-              _results.push(x === W);
+              i = _ref[_i];
+              _results.push(i === W);
             }
             return _results;
           })();
@@ -82,16 +100,12 @@
       return drawSprite(sx, sy, dx, dy);
     };
     fullRedraw = function() {
-      var dx, dy, p, pid, vb, vl, vr, vt, vx, vy, _results;
-      vl = 0;
-      vt = 0;
-      vr = canvasW / CELL_WIDTH + 1;
-      vb = canvasH / CELL_HEIGHT + 1;
-      for (vx = vl; vl <= vr ? vx <= vr : vx >= vr; vl <= vr ? vx++ : vx--) {
-        for (vy = vt; vt <= vb ? vy <= vb : vy >= vb; vt <= vb ? vy++ : vy--) {
-          dx = (vx - vl) * CELL_WIDTH;
-          dy = (vy - vt) * CELL_HEIGHT;
-          drawCell(vx, vy, dx, dy);
+      var dx, dy, p, pid, x, y, _ref, _ref2, _ref3, _ref4, _results;
+      for (x = _ref = v.l, _ref2 = v.r; _ref <= _ref2 ? x <= _ref2 : x >= _ref2; _ref <= _ref2 ? x++ : x--) {
+        for (y = _ref3 = v.t, _ref4 = v.b; _ref3 <= _ref4 ? y <= _ref4 : y >= _ref4; _ref3 <= _ref4 ? y++ : y--) {
+          dx = (x - v.l) * CELL_WIDTH;
+          dy = (y - v.t) * CELL_HEIGHT;
+          drawCell(x, y, dx, dy);
         }
       }
       _results = [];
@@ -102,20 +116,15 @@
       return _results;
     };
     drawPlayer = function(p, oldx, oldy) {
-      var dx, dy;
       if (oldx == null) {
         oldx = null;
       }
       if (oldy == null) {
         oldy = null;
       }
-      dx = p.x * CELL_WIDTH;
-      dy = p.y * CELL_HEIGHT;
-      drawSprite(15 + (p.id % 14), 8, dx, dy);
+      drawSprite(15 + (p.id % 14), 8, v.xToCanvasX(p.x), v.yToCanvasY(p.y));
       if (oldx !== null && oldy !== null) {
-        dx = oldx * CELL_WIDTH;
-        dy = oldy * CELL_HEIGHT;
-        return drawCell(oldx, oldy, dx, dy);
+        return drawCell(oldx, oldy, v.xToCanvasX(oldx), v.yToCanvasY(oldy));
       }
     };
     socket = io.connect('/');
