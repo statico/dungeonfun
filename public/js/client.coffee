@@ -83,7 +83,8 @@ $ ->
     for pid, p of players
       dx = p.x * CELL_WIDTH
       dy = p.y * CELL_HEIGHT
-      drawSprite 28, 8, dx, dy
+      # Sprite is a random character based on ID.
+      drawSprite 15 + (pid % 14), 8, dx, dy
 
   socket = io.connect 'http://localhost'
 

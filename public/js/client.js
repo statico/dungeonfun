@@ -99,7 +99,7 @@
         p = players[pid];
         dx = p.x * CELL_WIDTH;
         dy = p.y * CELL_HEIGHT;
-        _results.push(drawSprite(28, 8, dx, dy));
+        _results.push(drawSprite(15 + (pid % 14), 8, dx, dy));
       }
       return _results;
     };
