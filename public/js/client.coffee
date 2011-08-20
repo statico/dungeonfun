@@ -35,15 +35,30 @@ $ ->
       for vy in [vt..vb]
         value = w.map.get vx, vy
 
+        # Destination canvas pixel coords
         dx = (vx - vl) * CELL_WIDTH
         dy = (vy - vt) * CELL_HEIGHT
 
-        if value
-          ctx.fillStyle = 'white'
-        else
-          ctx.fillStyle = 'black'
-        ctx.strokeStyle = 'red'
-        ctx.fillRect dx, dy, CELL_WIDTH, CELL_HEIGHT
+        # Determine sprite coords
+        switch value
+          when w.CELL_WALL
+            sx = 31
+            sy = 20
+          when w.CELL_ROOM
+            sx = 8
+            sy = 21
+          when w.CELL_DOOR
+            sx = 2
+            sy = 21
+          when w.CELL_HALLWAY
+            sx = 9
+            sy = 21
+          else
+            sx = 39
+            sy = 29
+
+        # Copy the sprite
+        ctx.drawImage spritemap, sx * SPRITE_SIZE, sy * SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, dx, dy, CELL_WIDTH, CELL_HEIGHT
 
   socket = io.connect 'http://localhost'
 
@@ -55,5 +70,6 @@ $ ->
     redraw()
 
   socket.emit 'getTile', {x: 0, y: 0}
+  socket.emit 'getTile', {x: 1, y: 0}
 
   log 'welcome'

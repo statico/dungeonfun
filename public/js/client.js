@@ -25,7 +25,7 @@
     ctx.fillRect(0, 0, canvasW, canvasH);
     w = new World();
     redraw = function() {
-      var dx, dy, value, vb, vl, vr, vt, vx, vy, _results;
+      var dx, dy, sx, sy, value, vb, vl, vr, vt, vx, vy, _results;
       vl = 0;
       vt = 0;
       vr = canvasW / CELL_WIDTH + 1;
@@ -39,13 +39,28 @@
             value = w.map.get(vx, vy);
             dx = (vx - vl) * CELL_WIDTH;
             dy = (vy - vt) * CELL_HEIGHT;
-            if (value) {
-              ctx.fillStyle = 'white';
-            } else {
-              ctx.fillStyle = 'black';
+            switch (value) {
+              case w.CELL_WALL:
+                sx = 31;
+                sy = 20;
+                break;
+              case w.CELL_ROOM:
+                sx = 8;
+                sy = 21;
+                break;
+              case w.CELL_DOOR:
+                sx = 2;
+                sy = 21;
+                break;
+              case w.CELL_HALLWAY:
+                sx = 9;
+                sy = 21;
+                break;
+              default:
+                sx = 39;
+                sy = 29;
             }
-            ctx.strokeStyle = 'red';
-            _results2.push(ctx.fillRect(dx, dy, CELL_WIDTH, CELL_HEIGHT));
+            _results2.push(ctx.drawImage(spritemap, sx * SPRITE_SIZE, sy * SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, dx, dy, CELL_WIDTH, CELL_HEIGHT));
           }
           return _results2;
         })());
@@ -62,6 +77,10 @@
     });
     socket.emit('getTile', {
       x: 0,
+      y: 0
+    });
+    socket.emit('getTile', {
+      x: 1,
       y: 0
     });
     return log('welcome');
