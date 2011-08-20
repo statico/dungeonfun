@@ -1,20 +1,17 @@
+log = () -> console?.log?(Array.prototype.slice.call(arguments))
+
 express = require 'express'
 world = require './public/js/world.coffee'
 socketio = require 'socket.io'
+
+# WORLD ---------------------------------------------------------------------
 
 w = new world.World()
 w.makeTile 0, 0
 w.makeTile 1, 0
 w.connectTiles 0,0, 1,0
 
-t1 = w.getTile 0, 0
-t2 = w.getTile 1, 0
-
-format = (row) ->
-  line = row.join('')
-  line = line.replace(/0/g, '.')
-  line = line.replace(/(\d)/g, "\x1b[3$1m$1\x1b[0m")
-  return line
+# EXPRESS -------------------------------------------------------------------
 
 app = express.createServer()
 
@@ -43,9 +40,22 @@ app.get '/', (req, res) ->
     title: 'hello'
     message: 'world'
 
+# SOCKET.IO -----------------------------------------------------------------
+
 io = socketio.listen app
+io.configure ->
+  io.set 'transports', ['xhr-polling']
+
 io.sockets.on 'connection', (socket) ->
-  console.info 'client connected'
+  socket.on 'getTile', (data) ->
+    x = data.x
+    y = data.y
+    socket.emit 'tile',
+      x: x
+      y: y
+      content: w.getTile x, y
+
+# BEGIN ---------------------------------------------------------------------
 
 port = process.env.PORT or 3000
 console.info "Listening on http://127.0.0.1:#{port}/"
