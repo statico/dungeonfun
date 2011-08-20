@@ -86,7 +86,7 @@ $ ->
       # Sprite is a random character based on ID.
       drawSprite 15 + (pid % 14), 8, dx, dy
 
-  socket = io.connect 'http://localhost'
+  socket = io.connect '/'
 
   socket.on 'connected', (socket) ->
     log 'connected', socket

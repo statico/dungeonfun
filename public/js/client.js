@@ -103,7 +103,7 @@
       }
       return _results;
     };
-    socket = io.connect('http://localhost');
+    socket = io.connect('/');
     socket.on('connected', function(socket) {
       return log('connected', socket);
     });
