@@ -54,7 +54,7 @@
       }
       return result;
     };
-    Graph.prototype.neighbors = function(x, y, includeDiagonals) {
+    Graph.prototype.neighborPoints = function(x, y, includeDiagonals) {
       if (includeDiagonals == null) {
         includeDiagonals = true;
       }
@@ -63,6 +63,19 @@
       } else {
         return [[x, y - 1], [x - 1, y], [x + 1, y], [x, y + 1]];
       }
+    };
+    Graph.prototype.neighbors = function(x, y, includeDiagonals) {
+      var i, j, _i, _len, _ref, _ref2, _results;
+      if (includeDiagonals == null) {
+        includeDiagonals = true;
+      }
+      _ref = this.neighborPoints(x, y, includeDiagonals);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _ref2 = _ref[_i], i = _ref2[0], j = _ref2[1];
+        _results.push(this.get(i, j));
+      }
+      return _results;
     };
     Graph.prototype.astar = function(x1, y1, x2, y2, filter, heuristic, includeDiagonals) {
       var beenVisited, current, end, gScore, getNode, n, neighbor, nodes, open, p, ret, start, _i, _len, _ref;
@@ -114,7 +127,7 @@
           return ret.reverse();
         }
         current.closed = true;
-        _ref = this.neighbors(current.x, current.y, includeDiagonals);
+        _ref = this.neighborPoints(current.x, current.y, includeDiagonals);
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           p = _ref[_i];
           neighbor = getNode(p[0], p[1]);

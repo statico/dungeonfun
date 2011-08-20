@@ -22,16 +22,32 @@ g.setPoint([1, 1], 66)
 assert.equal g.getPoint([0, 0]), 55
 assert.equal g.getPoint([1, 1]), 66
 
-# Neighbors with diagonals.
-neighbors = (p.join(',') for p in g.neighbors(0, 0))
+# Neighbor helper.
+g = new graph.Graph()
+g.set 0, 0, 1
+g.set 1, 0, 2
+g.set 2, 0, 3
+g.set 0, 1, 4
+g.set 1, 1, 5
+g.set 2, 1, 6
+g.set 0, 2, 7
+g.set 1, 2, 8
+g.set 2, 2, 9
+diagonals = g.neighbors(1, 1, true)
+assert.deepEqual diagonals, [1,2,3, 4,  6, 7,8,9]
+cardinals = g.neighbors(1, 1, false)
+assert.deepEqual cardinals, [  2,   4,  6, 8    ]
+
+# Neighbor points with diagonals.
+neighbors = (p.join(',') for p in g.neighborPoints(0, 0))
 points = ['-1,-1', '0,-1', '1,-1',
           '-1,0',          '1,0',
           '-1,1',  '0,1',  '1,1']
 for point in points
   assert.ok point in neighbors, "#{point} in neighbors"
 
-# Neighbors without diagonals.
-neighbors = (p.join(',') for p in g.neighbors(0, 0, false))
+# Neighbor points without diagonals.
+neighbors = (p.join(',') for p in g.neighborPoints(0, 0, false))
 points = [         '0,-1',
           '-1,0',          '1,0',
                    '0,1']

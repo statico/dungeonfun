@@ -1,7 +1,10 @@
 (function() {
-  var log;
+  var log, str;
   log = function() {
     return typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log(Array.prototype.slice.call(arguments)) : void 0 : void 0;
+  };
+  str = function(x) {
+    return JSON.stringify(x);
   };
   $(function() {
     var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, body, canvas, canvasH, canvasW, ctx, redraw, socket, spritemap, w;
@@ -25,7 +28,7 @@
     ctx.fillRect(0, 0, canvasW, canvasH);
     w = new World();
     redraw = function() {
-      var dx, dy, sx, sy, value, vb, vl, vr, vt, vx, vy, _results;
+      var S, W, dx, dy, n, sx, sy, value, vb, vl, vr, vt, vx, vy, x, _results;
       vl = 0;
       vt = 0;
       vr = canvasW / CELL_WIDTH + 1;
@@ -39,10 +42,31 @@
             value = w.map.get(vx, vy);
             dx = (vx - vl) * CELL_WIDTH;
             dy = (vy - vt) * CELL_HEIGHT;
+            W = w.CELL_WALL;
             switch (value) {
-              case w.CELL_WALL:
-                sx = 31;
+              case W:
                 sy = 20;
+                n = (function() {
+                  var _i, _len, _ref, _results3;
+                  _ref = w.map.neighbors(vx, vy, false);
+                  _results3 = [];
+                  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                    x = _ref[_i];
+                    _results3.push(x === W);
+                  }
+                  return _results3;
+                })();
+                if (n[0] && n[1] && n[2] && n[3]) {
+                  sx = 34;
+                } else if (n[0] && n[3]) {
+                  sx = 30;
+                } else if (n[1] && n[2]) {
+                  sx = 31;
+                } else if (n[3]) {
+                  sx = 32;
+                } else {
+                  sx = 34;
+                }
                 break;
               case w.CELL_ROOM:
                 sx = 8;
@@ -60,7 +84,8 @@
                 sx = 39;
                 sy = 29;
             }
-            _results2.push(ctx.drawImage(spritemap, sx * SPRITE_SIZE, sy * SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, dx, dy, CELL_WIDTH, CELL_HEIGHT));
+            S = SPRITE_SIZE;
+            _results2.push(ctx.drawImage(spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT));
           }
           return _results2;
         })());

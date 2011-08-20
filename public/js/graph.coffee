@@ -42,7 +42,8 @@ class Graph
       result.push row
     return result
 
-  neighbors: (x, y, includeDiagonals = true) ->
+  neighborPoints: (x, y, includeDiagonals = true) ->
+    # Returns 8 or 4 coordinates which surround the given x, y.
     if includeDiagonals
       return [
         [x - 1, y - 1],
@@ -58,11 +59,16 @@ class Graph
       ]
     else
       return [
+        # Top, left, right, bottom.
         [x,     y - 1],
         [x - 1, y],
         [x + 1, y],
         [x,     y + 1],
       ]
+
+  neighbors: (x, y, includeDiagonals = true) ->
+    # Returns the values of the 8 or 4 coordinates surrounding the given one.
+    return (@get(i, j) for [i,j] in @neighborPoints(x, y, includeDiagonals))
 
   astar: (x1, y1, x2, y2, filter = null, heuristic = null, includeDiagonals = false) ->
     # x1, y1 - starting point
@@ -112,7 +118,7 @@ class Graph
       # its neighbors
       current.closed = true
 
-      for p in @neighbors(current.x, current.y, includeDiagonals)
+      for p in @neighborPoints(current.x, current.y, includeDiagonals)
         neighbor = getNode p[0], p[1]
 
         if neighbor.closed or not filter(neighbor)

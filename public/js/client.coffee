@@ -1,4 +1,5 @@
 log = () -> console?.log?(Array.prototype.slice.call(arguments))
+str = (x) -> JSON.stringify x
 
 $ ->
   body = $(document.body)
@@ -40,10 +41,22 @@ $ ->
         dy = (vy - vt) * CELL_HEIGHT
 
         # Determine sprite coords
+        W = w.CELL_WALL
         switch value
-          when w.CELL_WALL
-            sx = 31
+          when W
             sy = 20
+            # Neighbors array: top, left, right, bottom.
+            n = (x == W for x in w.map.neighbors(vx, vy, false))
+            if n[0] and n[1] and n[2] and n[3] # surrounded
+              sx = 34
+            else if n[0] and n[3] # vertical wall
+              sx = 30
+            else if n[1] and n[2] # horizontal wall
+              sx = 31
+            else if n[3] # top of vertical wall
+              sx = 32
+            else # eh?
+              sx = 34
           when w.CELL_ROOM
             sx = 8
             sy = 21
@@ -58,7 +71,8 @@ $ ->
             sy = 29
 
         # Copy the sprite
-        ctx.drawImage spritemap, sx * SPRITE_SIZE, sy * SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, dx, dy, CELL_WIDTH, CELL_HEIGHT
+        S = SPRITE_SIZE
+        ctx.drawImage spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT
 
   socket = io.connect 'http://localhost'
 
