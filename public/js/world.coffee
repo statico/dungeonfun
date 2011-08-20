@@ -30,6 +30,17 @@ class World
     rooms = @makeRooms(t, r, b, l)
     @makeHallways(t, r, b, l, rooms)
 
+  loadTile: (tx, ty, content) ->
+    # This could probably be sped up.
+    l = tx * @TILE_SIZE
+    r = (tx + 1) * @TILE_SIZE
+    t = ty * @TILE_SIZE
+    b = (ty + 1) * @TILE_SIZE
+    for y in [t..b]
+      row = content[y - t]
+      for x in [l..r]
+        @map.set x, y, row?[x - l]
+
   makeRooms: (T, R, B, L) ->
     rooms = []
 
