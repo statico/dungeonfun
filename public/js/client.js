@@ -7,7 +7,7 @@
     return JSON.stringify(x);
   };
   $(function() {
-    var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, body, canvas, canvasH, canvasW, ctx, redraw, socket, spritemap, w;
+    var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, body, canvas, canvasH, canvasW, ctx, drawCell, fullRedraw, socket, spritemap, w;
     body = $(document.body);
     SPRITE_SIZE = 16;
     SPRITE_BG = '#476c6c';
@@ -27,8 +27,56 @@
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvasW, canvasH);
     w = new World();
-    redraw = function() {
-      var S, W, dx, dy, n, sx, sy, value, vb, vl, vr, vt, vx, vy, x, _results;
+    drawCell = function(vx, vy, dx, dy) {
+      var S, W, n, sx, sy, value, x;
+      value = w.map.get(vx, vy);
+      W = w.CELL_WALL;
+      switch (value) {
+        case W:
+          sy = 20;
+          n = (function() {
+            var _i, _len, _ref, _results;
+            _ref = w.map.neighbors(vx, vy, false);
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              x = _ref[_i];
+              _results.push(x === W);
+            }
+            return _results;
+          })();
+          if (n[0] && n[1] && n[2] && n[3]) {
+            sx = 34;
+          } else if (n[0] && n[3]) {
+            sx = 30;
+          } else if (n[1] && n[2]) {
+            sx = 31;
+          } else if (n[3]) {
+            sx = 32;
+          } else {
+            sx = 34;
+          }
+          break;
+        case w.CELL_ROOM:
+          sx = 8;
+          sy = 21;
+          break;
+        case w.CELL_DOOR:
+          sx = 2;
+          sy = 21;
+          break;
+        case w.CELL_HALLWAY:
+          sx = 9;
+          sy = 21;
+          break;
+        default:
+          sx = 39;
+          sy = 29;
+      }
+      S = SPRITE_SIZE;
+      return ctx.drawImage(spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT);
+    };
+    fullRedraw = function() {
+      var dx, dy, vb, vl, vr, vt, vx, vy, _results;
       vl = 0;
       vt = 0;
       vr = canvasW / CELL_WIDTH + 1;
@@ -39,53 +87,9 @@
           var _results2;
           _results2 = [];
           for (vy = vt; vt <= vb ? vy <= vb : vy >= vb; vt <= vb ? vy++ : vy--) {
-            value = w.map.get(vx, vy);
             dx = (vx - vl) * CELL_WIDTH;
             dy = (vy - vt) * CELL_HEIGHT;
-            W = w.CELL_WALL;
-            switch (value) {
-              case W:
-                sy = 20;
-                n = (function() {
-                  var _i, _len, _ref, _results3;
-                  _ref = w.map.neighbors(vx, vy, false);
-                  _results3 = [];
-                  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                    x = _ref[_i];
-                    _results3.push(x === W);
-                  }
-                  return _results3;
-                })();
-                if (n[0] && n[1] && n[2] && n[3]) {
-                  sx = 34;
-                } else if (n[0] && n[3]) {
-                  sx = 30;
-                } else if (n[1] && n[2]) {
-                  sx = 31;
-                } else if (n[3]) {
-                  sx = 32;
-                } else {
-                  sx = 34;
-                }
-                break;
-              case w.CELL_ROOM:
-                sx = 8;
-                sy = 21;
-                break;
-              case w.CELL_DOOR:
-                sx = 2;
-                sy = 21;
-                break;
-              case w.CELL_HALLWAY:
-                sx = 9;
-                sy = 21;
-                break;
-              default:
-                sx = 39;
-                sy = 29;
-            }
-            S = SPRITE_SIZE;
-            _results2.push(ctx.drawImage(spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT));
+            _results2.push(drawCell(vx, vy, dx, dy));
           }
           return _results2;
         })());
@@ -97,8 +101,9 @@
       return log('connected', socket);
     });
     socket.on('tile', function(data) {
+      log('received tile', data.x, data.y);
       w.loadTile(data.x, data.y, data.content);
-      return redraw();
+      return fullRedraw();
     });
     socket.emit('getTile', {
       x: 0,
