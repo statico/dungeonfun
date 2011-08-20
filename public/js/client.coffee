@@ -101,7 +101,6 @@ $ ->
     fullRedraw()
 
   onUpdate = (p) ->
-    log str(p)
     players[p.id] = p
     fullRedraw()
   socket.on 'playerUpdate', onUpdate

@@ -96,6 +96,7 @@ io.sockets.on 'connection', (socket) ->
     player.y = y
     p.set x, y, player
 
+    socket.broadcast.emit 'playerUpdate', player
     socket.emit 'playerUpdate', player
 
   socket.on 'getTile', (data) ->

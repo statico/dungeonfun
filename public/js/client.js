@@ -121,7 +121,6 @@
       return fullRedraw();
     });
     onUpdate = function(p) {
-      log(str(p));
       players[p.id] = p;
       return fullRedraw();
     };
