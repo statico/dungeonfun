@@ -48,16 +48,14 @@ io.configure ->
 
 io.sockets.on 'connection', (socket) ->
   socket.on 'getTile', (data) ->
-    x = data.x
-    y = data.y
     socket.emit 'tile',
-      x: x
-      y: y
-      content: w.getTile x, y
+      x: data.x
+      y: data.y
+      content: w.getTile data.x, data.y
 
 # BEGIN ---------------------------------------------------------------------
 
 port = process.env.PORT or 3000
-console.info "Listening on http://127.0.0.1:#{port}/"
+log "Listening on http://127.0.0.1:#{port}/"
 app.listen port
 
