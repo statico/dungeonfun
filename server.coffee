@@ -2,6 +2,7 @@ log = () -> console?.log?(Array.prototype.slice.call(arguments))
 
 express = require 'express'
 world = require './public/js/world.coffee'
+graph = require './public/js/graph.coffee'
 socketio = require 'socket.io'
 
 # WORLD ---------------------------------------------------------------------
@@ -10,6 +11,10 @@ w = new world.World()
 w.makeTile 0, 0
 w.makeTile 1, 0
 w.connectTiles 0,0, 1,0
+
+p = new graph.Graph()
+players = {}
+lastPlayerId = 0
 
 # EXPRESS -------------------------------------------------------------------
 
@@ -37,7 +42,7 @@ app.set 'view options',
 
 app.get '/', (req, res) ->
   res.render 'main.jade',
-    title: 'hello'
+    title: 'nodefun'
     message: 'world'
 
 # SOCKET.IO -----------------------------------------------------------------
@@ -47,11 +52,58 @@ io.configure ->
   io.set 'transports', ['xhr-polling']
 
 io.sockets.on 'connection', (socket) ->
+  # Find a empty coord for the new player
+  x = -1
+  y = -1
+  while w.map.get(x, y) != w.CELL_ROOM or p.get(x, y)
+    x = Math.floor(Math.random() * w.TILE_SIZE)
+    y = Math.floor(Math.random() * w.TILE_SIZE)
+  player =
+    x: x
+    y: y
+    id: lastPlayerId++
+  players[player.id] = player
+  log 'New player:', player
+  socket.broadcast.emit 'newPlayer', player
+  socket.emit 'allPlayers', players
+
+  socket.on 'disconnect', ->
+    log 'Disconnected:', player
+    socket.broadcast.emit 'removePlayer', player
+    delete players[player.id]
+
+  socket.on 'movePlayer', (data) ->
+    directions =
+      nw: [-1, -1]
+      n:  [0,  -1]
+      ne: [1,  -1]
+      w:  [-1, 0]
+      e:  [1,  0]
+      sw: [-1, 1]
+      s:  [0,  1]
+      se: [1,  1]
+    delta = directions[data.direction]
+    return if not delta
+
+    x = player.x + delta[0]
+    y = player.y + delta[1]
+    value = w.map.get x, y
+    if (value != w.CELL_ROOM and value != w.CELL_DOOR and value != w.CELL_HALLWAY) or p.get(x, y)
+      return
+
+    p.clear player.x, player.y
+    player.x = x
+    player.y = y
+    p.set x, y, player
+
+    socket.emit 'playerUpdate', player
+
   socket.on 'getTile', (data) ->
     socket.emit 'tile',
       x: data.x
       y: data.y
       content: w.getTile data.x, data.y
+
 
 # BEGIN ---------------------------------------------------------------------
 

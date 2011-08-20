@@ -22,6 +22,9 @@ g.setPoint([1, 1], 66)
 assert.equal g.getPoint([0, 0]), 55
 assert.equal g.getPoint([1, 1]), 66
 
+g.clear 1, 1
+assert.ok not g.get 1, 1
+
 # Neighbor helper.
 g = new graph.Graph()
 g.set 0, 0, 1

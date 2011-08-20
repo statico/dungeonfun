@@ -24,6 +24,13 @@ $ ->
 
   w = new World()
 
+  p = new Graph()
+  players = {}
+
+  drawSprite = (sx, sy, dx, dy) ->
+    S = SPRITE_SIZE
+    ctx.drawImage spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT
+
   drawCell = (vx, vy, dx, dy) ->
     value = w.map.get vx, vy
 
@@ -56,10 +63,7 @@ $ ->
       else
         sx = 39
         sy = 29
-
-    # Copy the sprite
-    S = SPRITE_SIZE
-    ctx.drawImage spritemap, sx * S, sy * S, S, S, dx, dy, CELL_WIDTH, CELL_HEIGHT
+    drawSprite sx, sy, dx, dy
 
   fullRedraw = ->
 
@@ -74,8 +78,12 @@ $ ->
         # Destination canvas pixel coords
         dx = (vx - vl) * CELL_WIDTH
         dy = (vy - vt) * CELL_HEIGHT
-        drawCell(vx, vy, dx, dy)
+        drawCell vx, vy, dx, dy
 
+    for pid, p of players
+      dx = p.x * CELL_WIDTH
+      dy = p.y * CELL_HEIGHT
+      drawSprite 28, 8, dx, dy
 
   socket = io.connect 'http://localhost'
 
@@ -87,7 +95,33 @@ $ ->
     w.loadTile data.x, data.y, data.content
     fullRedraw()
 
+  socket.on 'allPlayers', (data) ->
+    for pid, p of data
+      players[p.id] = p
+    fullRedraw()
+
+  onUpdate = (p) ->
+    log str(p)
+    players[p.id] = p
+    fullRedraw()
+  socket.on 'playerUpdate', onUpdate
+  socket.on 'newPlayer', onUpdate
+
   socket.emit 'getTile', {x: 0, y: 0}
   socket.emit 'getTile', {x: 1, y: 0}
+
+
+  $(document).bind 'keydown', (e) ->
+    switch String.fromCharCode(e.which)
+      when 'H' then socket.emit 'movePlayer', direction: 'w'
+      when 'L' then socket.emit 'movePlayer', direction: 'e'
+      when 'J' then socket.emit 'movePlayer', direction: 's'
+      when 'K' then socket.emit 'movePlayer', direction: 'n'
+      when 'Y' then socket.emit 'movePlayer', direction: 'nw'
+      when 'U' then socket.emit 'movePlayer', direction: 'ne'
+      when 'B' then socket.emit 'movePlayer', direction: 'sw'
+      when 'N' then socket.emit 'movePlayer', direction: 'se'
+    if not e.altKey and not e.ctrlKey and not e.metaKey
+      return false
 
   log 'welcome'

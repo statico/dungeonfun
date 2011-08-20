@@ -42,6 +42,13 @@
     Graph.prototype.setPoint = function(p, value) {
       return this.set(p[0], p[1], value);
     };
+    Graph.prototype.clear = function(x, y) {
+      var a;
+      a = this.map[x];
+      if (a) {
+        return delete a[y];
+      }
+    };
     Graph.prototype.getRect = function(x, y, w, h) {
       var j, k, result, row, _ref, _ref2;
       result = [];

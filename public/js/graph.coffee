@@ -33,6 +33,10 @@ class Graph
   setPoint: (p, value) ->
     @set p[0], p[1], value
 
+  clear: (x, y) ->
+    a = @map[x]
+    delete a[y] if a
+
   getRect: (x, y, w, h) ->
     result = []
     for k in [y..y+h-1]
