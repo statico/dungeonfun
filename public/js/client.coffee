@@ -81,10 +81,18 @@ $ ->
         drawCell vx, vy, dx, dy
 
     for pid, p of players
-      dx = p.x * CELL_WIDTH
-      dy = p.y * CELL_HEIGHT
-      # Sprite is a random character based on ID.
-      drawSprite 15 + (pid % 14), 8, dx, dy
+      drawPlayer(p)
+
+  drawPlayer = (p, oldx = null, oldy = null) ->
+    dx = p.x * CELL_WIDTH
+    dy = p.y * CELL_HEIGHT
+    # Sprite is a random character based on ID.
+    drawSprite 15 + (p.id % 14), 8, dx, dy
+
+    if oldx != null and oldy != null
+      dx = oldx * CELL_WIDTH
+      dy = oldy * CELL_HEIGHT
+      drawCell(oldx, oldy, dx, dy)
 
   socket = io.connect '/'
 
@@ -102,8 +110,12 @@ $ ->
     fullRedraw()
 
   onUpdate = (p) ->
+    oldp = players[p.id]
     players[p.id] = p
-    fullRedraw()
+    if oldp
+      drawPlayer p, oldp.x, oldp.y
+    else
+      fullRedraw()
   socket.on 'playerUpdate', onUpdate
   socket.on 'newPlayer', onUpdate
 

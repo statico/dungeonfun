@@ -7,7 +7,7 @@
     return JSON.stringify(x);
   };
   $(function() {
-    var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, body, canvas, canvasH, canvasW, ctx, drawCell, drawSprite, fullRedraw, onUpdate, p, players, socket, spritemap, w;
+    var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, body, canvas, canvasH, canvasW, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, onUpdate, p, players, socket, spritemap, w;
     body = $(document.body);
     SPRITE_SIZE = 16;
     SPRITE_BG = '#476c6c';
@@ -97,11 +97,26 @@
       _results = [];
       for (pid in players) {
         p = players[pid];
-        dx = p.x * CELL_WIDTH;
-        dy = p.y * CELL_HEIGHT;
-        _results.push(drawSprite(15 + (pid % 14), 8, dx, dy));
+        _results.push(drawPlayer(p));
       }
       return _results;
+    };
+    drawPlayer = function(p, oldx, oldy) {
+      var dx, dy;
+      if (oldx == null) {
+        oldx = null;
+      }
+      if (oldy == null) {
+        oldy = null;
+      }
+      dx = p.x * CELL_WIDTH;
+      dy = p.y * CELL_HEIGHT;
+      drawSprite(15 + (p.id % 14), 8, dx, dy);
+      if (oldx !== null && oldy !== null) {
+        dx = oldx * CELL_WIDTH;
+        dy = oldy * CELL_HEIGHT;
+        return drawCell(oldx, oldy, dx, dy);
+      }
     };
     socket = io.connect('/');
     socket.on('connected', function(socket) {
@@ -121,8 +136,14 @@
       return fullRedraw();
     });
     onUpdate = function(p) {
+      var oldp;
+      oldp = players[p.id];
       players[p.id] = p;
-      return fullRedraw();
+      if (oldp) {
+        return drawPlayer(p, oldp.x, oldp.y);
+      } else {
+        return fullRedraw();
+      }
     };
     socket.on('playerUpdate', onUpdate);
     socket.on('newPlayer', onUpdate);
