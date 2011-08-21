@@ -197,6 +197,7 @@ class World
     # them.
     S = @TILE_SIZE
     PADDING = 10
+    return
 
     # Tiles must be adjacent (at the moment).
     if Math.abs((tx2 - tx1) + (ty2 - ty1)) != 1

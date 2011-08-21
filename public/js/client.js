@@ -17,7 +17,7 @@
   Viewport = (function() {
     function Viewport(canvas) {
       this.canvas = canvas;
-      this.set(0, 0);
+      this.set(-10, -10);
     }
     Viewport.prototype.set = function(x, y) {
       this.l = x;
@@ -37,7 +37,7 @@
     return Viewport;
   })();
   $(function() {
-    var body, canvas, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, mypid, onUpdate, p, players, socket, v, w;
+    var body, canvas, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, i, j, mypid, onUpdate, p, players, socket, v, w, _results;
     body = $(document.body);
     body.css({
       overflow: 'hidden'
@@ -256,13 +256,20 @@
       }
     });
     log('welcome');
-    socket.emit('getTile', {
-      x: 0,
-      y: 0
-    });
-    return socket.emit('getTile', {
-      x: 1,
-      y: 0
-    });
+    _results = [];
+    for (i = -1; i <= 1; i++) {
+      _results.push((function() {
+        var _results2;
+        _results2 = [];
+        for (j = -1; j <= 1; j++) {
+          _results2.push(socket.emit('getTile', {
+            x: i,
+            y: j
+          }));
+        }
+        return _results2;
+      })());
+    }
+    return _results;
   });
 }).call(this);

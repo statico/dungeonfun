@@ -16,7 +16,7 @@ SCROLL_PADDING = 70 # pixels
 class Viewport
 
   constructor: (@canvas) ->
-    @set 0, 0
+    @set -10, -10
 
   set: (x, y) ->
     @l = x
@@ -190,7 +190,8 @@ $ ->
       return false
 
   log 'welcome'
-  socket.emit 'getTile', {x: 0, y: 0}
-  socket.emit 'getTile', {x: 1, y: 0}
+  for i in [-1..1]
+    for j in [-1..1]
+      socket.emit 'getTile', {x: i, y: j}
 
 

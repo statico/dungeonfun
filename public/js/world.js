@@ -245,6 +245,7 @@
       var PADDING, S, choices, dir, filter, obj, p, p1, p2, path, points, t1p, t2p, value, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
       S = this.TILE_SIZE;
       PADDING = 10;
+      return;
       if (Math.abs((tx2 - tx1) + (ty2 - ty1)) !== 1) {
         console.warn('Tried to connect to non-adjacent tiles');
         return;
