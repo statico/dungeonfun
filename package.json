@@ -1,0 +1,10 @@
+{
+  "name": "nodefun",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "2.4.5",
+    "socket.io": "0.7.9",
+    "jade": "0.14.2",
+    "coffee-script": "1.1.2"
+  }
+}

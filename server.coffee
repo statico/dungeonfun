@@ -109,7 +109,7 @@ io.sockets.on 'connection', (socket) ->
 
 # BEGIN ---------------------------------------------------------------------
 
-port = process.env.PORT or 20000
+port = process.env.PORT or 5000
 log "Listening on http://127.0.0.1:#{port}/"
 app.listen port
 
