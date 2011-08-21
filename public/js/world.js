@@ -242,87 +242,97 @@
       return _results;
     };
     World.prototype.connectTiles = function(tx1, ty1, tx2, ty2) {
-      var PADDING, S, choices, dir, filter, obj, p, p1, p2, path, points, t1p, t2p, value, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
+      var PADDING, S, choices, dir, filter, obj, p, p1, p2, path, search, t1p, t2p, _i, _j, _len, _len2, _ref, _ref2, _results;
       S = this.TILE_SIZE;
       PADDING = 10;
-      return;
       if (Math.abs((tx2 - tx1) + (ty2 - ty1)) !== 1) {
         console.warn('Tried to connect to non-adjacent tiles');
         return;
       }
-      if (ty1 > ty2) {
-        dir = 1;
-      }
-      if (tx1 < tx2) {
-        dir = 2;
-      }
       if (ty1 < ty2) {
-        dir = 3;
+        dir = 'V';
+      } else if (ty1 > ty2) {
+        dir = 'V';
+        _ref = [tx2, ty2, tx1, ty1], tx1 = _ref[0], ty1 = _ref[1], tx2 = _ref[2], ty2 = _ref[3];
+      } else if (tx1 < tx2) {
+        dir = 'H';
+      } else if (tx1 > tx2) {
+        dir = 'H';
+        _ref2 = [tx2, ty2, tx1, ty1], tx1 = _ref2[0], ty1 = _ref2[1], tx2 = _ref2[2], ty2 = _ref2[3];
       }
-      if (tx1 > tx2) {
-        dir = 4;
-      }
-      if (dir === 2) {
-        for (x = _ref = tx1 * S + S - 1 - PADDING, _ref2 = tx1 * S; _ref <= _ref2 ? x <= _ref2 : x >= _ref2; _ref <= _ref2 ? x++ : x--) {
+      search = __bind(function(a, b, direction, swap) {
+        var end, i, j, points, start, value, x, y, _ref3, _ref4, _ref5, _ref6;
+        if (direction > 0) {
+          start = a * S + PADDING;
+          end = a * S + S;
+        } else {
+          start = a * S + S - 1 - PADDING;
+          end = a * S;
+        }
+        for (i = start; start <= end ? i <= end : i >= end; start <= end ? i++ : i--) {
           points = [];
-          for (y = _ref3 = ty1 * S, _ref4 = ty1 * S + S; _ref3 <= _ref4 ? y <= _ref4 : y >= _ref4; _ref3 <= _ref4 ? y++ : y--) {
+          for (j = _ref3 = b * S, _ref4 = b * S + S; _ref3 <= _ref4 ? j <= _ref4 : j >= _ref4; _ref3 <= _ref4 ? j++ : j--) {
+            if (swap) {
+              _ref5 = [j, i], x = _ref5[0], y = _ref5[1];
+            } else {
+              _ref6 = [i, j], x = _ref6[0], y = _ref6[1];
+            }
             value = this.map.get(x, y);
             if (value === this.CELL_HALLWAY || value === this.CELL_DOOR) {
               points.push([x, y]);
             }
           }
           if (points.length) {
-            break;
+            return points;
           }
         }
-        t1p = points;
-        for (x = _ref5 = tx2 * S + PADDING, _ref6 = tx2 * S + S; _ref5 <= _ref6 ? x <= _ref6 : x >= _ref6; _ref5 <= _ref6 ? x++ : x--) {
-          points = [];
-          for (y = _ref7 = ty1 * S, _ref8 = ty1 * S + S; _ref7 <= _ref8 ? y <= _ref8 : y >= _ref8; _ref7 <= _ref8 ? y++ : y--) {
-            value = this.map.get(x, y);
-            if (value === this.CELL_HALLWAY || value === this.CELL_DOOR) {
-              points.push([x, y]);
-            }
-          }
-          if (points.length) {
-            break;
-          }
-        }
-        t2p = points;
-        p1 = t1p[randInt(t1p.length)];
-        choices = new heap.BinaryHeap(function(obj) {
-          return obj.distance;
+      }, this);
+      if (dir === 'H') {
+        t1p = search(tx1, ty1, -1, false);
+        t2p = search(tx2, ty2, 1, false);
+      }
+      if (dir === 'V') {
+        t1p = search(ty1, tx1, -1, true);
+        t2p = search(ty2, tx2, 1, true);
+      }
+      if (!t1p || !t2p) {
+        console.warn('Could not join tiles - one tile must be missing');
+        return;
+      }
+      p1 = t1p[randInt(t1p.length)];
+      choices = new heap.BinaryHeap(function(obj) {
+        return obj.distance;
+      });
+      for (_i = 0, _len = t2p.length; _i < _len; _i++) {
+        p2 = t2p[_i];
+        choices.push({
+          x: p2[0],
+          y: p2[1],
+          distance: (p2[0] - p1[0]) + (p2[1] - p1[1])
         });
-        for (_i = 0, _len = t2p.length; _i < _len; _i++) {
-          p2 = t2p[_i];
-          choices.push({
-            x: p2[0],
-            y: p2[1],
-            distance: (p2[0] - p1[0]) + (p2[1] - p1[1])
-          });
-        }
-        obj = choices.pop();
-        if (!obj) {
-          console.warn('Could not join tiles - no points on t2', tx1, ty1, tx2, ty2);
-          return;
-        }
-        p2 = [obj.x, obj.y];
-        if (!(p1 != null ? p1.length : void 0) || !(p2 != null ? p2.length : void 0)) {
-          console.warn('Could not join tiles - missing points', tx1, ty1, tx2, ty2);
-          return;
-        }
-        filter = __bind(function(node) {
-          x = node.value;
-          return !x || x === this.CELL_EMPTY || x === this.CELL_DOOR || x === this.CELL_HALLWAY;
-        }, this);
-        path = this.map.astar(p1[0], p1[1], p2[0], p2[1], filter);
-        _results = [];
-        for (_j = 0, _len2 = path.length; _j < _len2; _j++) {
-          p = path[_j];
-          _results.push(this.map.setPoint(p, this.CELL_HALLWAY));
-        }
-        return _results;
       }
+      obj = choices.pop();
+      if (!obj) {
+        console.warn('Could not join tiles - no points on t2', tx1, ty1, tx2, ty2);
+        return;
+      }
+      p2 = [obj.x, obj.y];
+      if (!(p1 != null ? p1.length : void 0) || !(p2 != null ? p2.length : void 0)) {
+        console.warn('Could not join tiles - missing points', tx1, ty1, tx2, ty2);
+        return;
+      }
+      filter = __bind(function(node) {
+        var x;
+        x = node.value;
+        return !x || x === this.CELL_EMPTY || x === this.CELL_DOOR || x === this.CELL_HALLWAY;
+      }, this);
+      path = this.map.astar(p1[0], p1[1], p2[0], p2[1], filter);
+      _results = [];
+      for (_j = 0, _len2 = path.length; _j < _len2; _j++) {
+        p = path[_j];
+        _results.push(this.map.setPoint(p, this.CELL_HALLWAY));
+      }
+      return _results;
     };
     return World;
   })();

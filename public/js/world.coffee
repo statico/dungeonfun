@@ -197,7 +197,6 @@ class World
     # them.
     S = @TILE_SIZE
     PADDING = 10
-    return
 
     # Tiles must be adjacent (at the moment).
     if Math.abs((tx2 - tx1) + (ty2 - ty1)) != 1
@@ -205,10 +204,16 @@ class World
       return
 
     # Determine the edge direction relative to the first tile.
-    dir = 1 if ty1 > ty2
-    dir = 2 if tx1 < tx2
-    dir = 3 if ty1 < ty2
-    dir = 4 if tx1 > tx2
+    if ty1 < ty2
+      dir = 'V'
+    else if ty1 > ty2
+      dir = 'V'
+      [tx1, ty1, tx2, ty2] = [tx2, ty2, tx1, ty1]
+    else if tx1 < tx2
+      dir = 'H'
+    else if tx1 > tx2
+      dir = 'H'
+      [tx1, ty1, tx2, ty2] = [tx2, ty2, tx1, ty1]
 
     # Find the row/column with one or more hallways or doors on each tile.
     #
@@ -216,56 +221,62 @@ class World
     # otherwise there's a large chance that one tile has hallways that bleed on
     # another and we're not actually joining the tiles. There's still a small
     # chance, however, that the tiles won't be connected.
-    if dir == 2
-      # T1 column, right to left
-      for x in [(tx1 * S + S - 1 - PADDING)..(tx1 * S)]
+    search = (a, b, direction, swap) =>
+      if direction > 0 # left to right
+        start = a * S + PADDING
+        end = a * S + S
+      else # right to left
+        start = a * S + S - 1 - PADDING
+        end = a * S
+      for i in [start..end]
         points = []
-        for y in [(ty1 * S)..(ty1 * S + S)]
+        for j in [(b * S)..(b * S + S)]
+          if swap
+            [x, y] = [j, i]
+          else
+            [x, y] = [i, j]
           value = @map.get x, y
           if value == @CELL_HALLWAY or value == @CELL_DOOR
-            #@map.set x, y, 5
             points.push [x, y]
-        break if points.length
-      t1p = points
+        return points if points.length
 
-      # T2 column, left to right
-      for x in [(tx2 * S + PADDING)..(tx2 * S + S)]
-        points = []
-        for y in [(ty1 * S)..(ty1 * S + S)]
-          value = @map.get x, y
-          if value == @CELL_HALLWAY or value == @CELL_DOOR
-            #@map.set x, y, 5
-            points.push [x, y]
-        break if points.length
-      t2p = points
+    if dir == 'H'
+      t1p = search tx1, ty1, -1, false
+      t2p = search tx2, ty2, 1, false
+    if dir == 'V'
+      t1p = search ty1, tx1, -1, true
+      t2p = search ty2, tx2, 1, true
+    if not t1p or not t2p
+      console.warn 'Could not join tiles - one tile must be missing'
+      return
 
-      # Pick a random point on T1 and the closest point to it on T2.
-      p1 = t1p[randInt t1p.length]
-      choices = new heap.BinaryHeap (obj) -> (obj.distance)
-      for p2 in t2p
-        choices.push
-          x: p2[0]
-          y: p2[1]
-          distance: (p2[0] - p1[0]) + (p2[1] - p1[1])
-      obj = choices.pop()
-      if not obj
-        console.warn 'Could not join tiles - no points on t2', tx1, ty1, tx2, ty2
-        return
-      p2 = [obj.x, obj.y]
+    # Pick a random point on T1 and the closest point to it on T2.
+    p1 = t1p[randInt t1p.length]
+    choices = new heap.BinaryHeap (obj) -> (obj.distance)
+    for p2 in t2p
+      choices.push
+        x: p2[0]
+        y: p2[1]
+        distance: (p2[0] - p1[0]) + (p2[1] - p1[1])
+    obj = choices.pop()
+    if not obj
+      console.warn 'Could not join tiles - no points on t2', tx1, ty1, tx2, ty2
+      return
+    p2 = [obj.x, obj.y]
 
-      if not p1?.length or not p2?.length
-        console.warn 'Could not join tiles - missing points', tx1, ty1, tx2, ty2
-        return
+    if not p1?.length or not p2?.length
+      console.warn 'Could not join tiles - missing points', tx1, ty1, tx2, ty2
+      return
 
-      # Join them.
-      filter = (node) =>
-        x = node.value
-        return (!x or x == @CELL_EMPTY or x == @CELL_DOOR or x == @CELL_HALLWAY)
-      path = @map.astar p1[0], p1[1], p2[0], p2[1], filter
-      for p in path
-        @map.setPoint p, @CELL_HALLWAY
-      #@map.setPoint p1, 7
-      #@map.setPoint p2, 7
+    # Join them.
+    filter = (node) =>
+      x = node.value
+      return (!x or x == @CELL_EMPTY or x == @CELL_DOOR or x == @CELL_HALLWAY)
+    path = @map.astar p1[0], p1[1], p2[0], p2[1], filter
+    for p in path
+      @map.setPoint p, @CELL_HALLWAY
+    #@map.setPoint p1, 7
+    #@map.setPoint p2, 7
 
 
 
