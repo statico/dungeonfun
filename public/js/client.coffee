@@ -16,7 +16,7 @@ SCROLL_PADDING = 70 # pixels
 class Viewport
 
   constructor: (@canvas) ->
-    @set -10, -10
+    @set 0, 0
 
   set: (x, y) ->
     @l = x
