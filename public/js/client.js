@@ -15,7 +15,7 @@
   Viewport = (function() {
     function Viewport(canvas) {
       this.canvas = canvas;
-      this.set(10, 10);
+      this.set(0, 0);
     }
     Viewport.prototype.set = function(x, y) {
       this.l = x;
