@@ -9,6 +9,8 @@ spritemap.src = '/images/nhtiles.png'
 CELL_WIDTH = 16
 CELL_HEIGHT = 16
 
+SCROLL_PADDING = 70 # pixels
+
 class Viewport
 
   constructor: (@canvas) ->
@@ -19,6 +21,9 @@ class Viewport
     @t = y
     @r = x + Math.floor(@canvas.width / CELL_WIDTH) + 1
     @b = y + Math.floor(@canvas.height / CELL_HEIGHT) + 1
+
+  translate: (x, y) ->
+    @set @l + x, @t + y
 
   xToCanvasX: (x) ->
     return (x - @l) * CELL_WIDTH
@@ -42,6 +47,7 @@ $ ->
 
   p = new Graph()
   players = {}
+  mypid = null
 
   drawSprite = (sx, sy, dx, dy) ->
     S = SPRITE_SIZE
@@ -120,10 +126,33 @@ $ ->
     players[p.id] = p
     if oldp
       drawPlayer p, oldp.x, oldp.y
+
+      # If *we* have been updated, make sure we're not too far off the screen
+      # and scroll the map by adjusting the Viewport and redrawing.
+      if p.id == mypid
+        vx = v.xToCanvasX(p.x)
+        vy = v.yToCanvasY(p.y)
+        P = SCROLL_PADDING
+        T = Math.floor(SCROLL_PADDING / CELL_WIDTH * 2)
+        tx = ty = 0
+        if vx < P
+          tx = -T
+        if vx > v.canvas.width - P
+          tx = T
+        if vy < P
+          ty = -T
+        if vy > v.canvas.height - P
+          ty = T
+        if tx or ty
+          v.translate tx, ty
+          fullRedraw()
     else
       fullRedraw()
   socket.on 'playerUpdate', onUpdate
   socket.on 'newPlayer', onUpdate
+
+  socket.on 'you', (p) ->
+    mypid = p.id
 
   socket.on 'removePlayer', (p) ->
     delete players[p.id]

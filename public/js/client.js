@@ -1,5 +1,5 @@
 (function() {
-  var CELL_HEIGHT, CELL_WIDTH, SPRITE_BG, SPRITE_SIZE, Viewport, log, spritemap, str;
+  var CELL_HEIGHT, CELL_WIDTH, SCROLL_PADDING, SPRITE_BG, SPRITE_SIZE, Viewport, log, spritemap, str;
   log = function() {
     return typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log(Array.prototype.slice.call(arguments)) : void 0 : void 0;
   };
@@ -12,6 +12,7 @@
   spritemap.src = '/images/nhtiles.png';
   CELL_WIDTH = 16;
   CELL_HEIGHT = 16;
+  SCROLL_PADDING = 70;
   Viewport = (function() {
     function Viewport(canvas) {
       this.canvas = canvas;
@@ -23,6 +24,9 @@
       this.r = x + Math.floor(this.canvas.width / CELL_WIDTH) + 1;
       return this.b = y + Math.floor(this.canvas.height / CELL_HEIGHT) + 1;
     };
+    Viewport.prototype.translate = function(x, y) {
+      return this.set(this.l + x, this.t + y);
+    };
     Viewport.prototype.xToCanvasX = function(x) {
       return (x - this.l) * CELL_WIDTH;
     };
@@ -32,7 +36,7 @@
     return Viewport;
   })();
   $(function() {
-    var body, canvas, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, onUpdate, p, players, socket, v, w;
+    var body, canvas, ctx, drawCell, drawPlayer, drawSprite, fullRedraw, mypid, onUpdate, p, players, socket, v, w;
     body = $(document.body);
     body.css({
       overflow: 'hidden'
@@ -47,6 +51,7 @@
     w = new World();
     p = new Graph();
     players = {};
+    mypid = null;
     drawSprite = function(sx, sy, dx, dy) {
       var S;
       S = SPRITE_SIZE;
@@ -145,17 +150,45 @@
       return fullRedraw();
     });
     onUpdate = function(p) {
-      var oldp;
+      var P, T, oldp, tx, ty, vx, vy;
       oldp = players[p.id];
       players[p.id] = p;
       if (oldp) {
-        return drawPlayer(p, oldp.x, oldp.y);
+        drawPlayer(p, oldp.x, oldp.y);
+        if (p.id === mypid) {
+          vx = v.xToCanvasX(p.x);
+          vy = v.yToCanvasY(p.y);
+          P = SCROLL_PADDING;
+          T = Math.floor(SCROLL_PADDING / CELL_WIDTH * 2);
+          log('SCROLL_PADDING=', P, 'T=', T, 'vx=', vx, 'vy=', vy);
+          tx = ty = 0;
+          if (vx < P) {
+            tx = -T;
+          }
+          if (vx > v.canvas.width - P) {
+            tx = T;
+          }
+          if (vy < P) {
+            ty = -T;
+          }
+          if (vy > v.canvas.height - P) {
+            ty = T;
+          }
+          if (tx || ty) {
+            v.translate(tx, ty);
+            log('translate', tx, ty, '->', v.l, v.t);
+            return fullRedraw();
+          }
+        }
       } else {
         return fullRedraw();
       }
     };
     socket.on('playerUpdate', onUpdate);
     socket.on('newPlayer', onUpdate);
+    socket.on('you', function(p) {
+      return mypid = p.id;
+    });
     socket.on('removePlayer', function(p) {
       delete players[p.id];
       return fullRedraw();

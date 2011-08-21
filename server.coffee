@@ -66,6 +66,7 @@ io.sockets.on 'connection', (socket) ->
   log 'New player:', player
   socket.broadcast.emit 'newPlayer', player
   socket.emit 'allPlayers', players
+  socket.emit 'you', player
 
   socket.on 'disconnect', ->
     log 'Disconnected:', player
