@@ -245,7 +245,7 @@
       var PADDING, S, choices, dir, filter, obj, p, p1, p2, path, points, t1p, t2p, value, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
       S = this.TILE_SIZE;
       PADDING = 10;
-      if ((tx2 - tx1) + (ty2 - ty1) !== 1) {
+      if (Math.abs((tx2 - tx1) + (ty2 - ty1)) !== 1) {
         console.warn('Tried to connect to non-adjacent tiles');
         return;
       }
@@ -301,9 +301,13 @@
           });
         }
         obj = choices.pop();
+        if (!obj) {
+          console.warn('Could not join tiles - no points on t2', tx1, ty1, tx2, ty2);
+          return;
+        }
         p2 = [obj.x, obj.y];
         if (!(p1 != null ? p1.length : void 0) || !(p2 != null ? p2.length : void 0)) {
-          console.warn('Could not join tiles', tx1, ty1, tx2, ty2);
+          console.warn('Could not join tiles - missing points', tx1, ty1, tx2, ty2);
           return;
         }
         filter = __bind(function(node) {

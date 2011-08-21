@@ -199,7 +199,7 @@ class World
     PADDING = 10
 
     # Tiles must be adjacent (at the moment).
-    if (tx2 - tx1) + (ty2 - ty1) != 1
+    if Math.abs((tx2 - tx1) + (ty2 - ty1)) != 1
       console.warn 'Tried to connect to non-adjacent tiles'
       return
 
@@ -247,10 +247,13 @@ class World
           y: p2[1]
           distance: (p2[0] - p1[0]) + (p2[1] - p1[1])
       obj = choices.pop()
+      if not obj
+        console.warn 'Could not join tiles - no points on t2', tx1, ty1, tx2, ty2
+        return
       p2 = [obj.x, obj.y]
 
       if not p1?.length or not p2?.length
-        console.warn 'Could not join tiles', tx1, ty1, tx2, ty2
+        console.warn 'Could not join tiles - missing points', tx1, ty1, tx2, ty2
         return
 
       # Join them.

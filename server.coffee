@@ -8,9 +8,15 @@ socketio = require 'socket.io'
 # WORLD ---------------------------------------------------------------------
 
 w = new world.World()
-w.makeTile 0, 0
-w.makeTile 1, 0
-w.connectTiles 0,0, 1,0
+for i in [-3..3]
+  for j in [-3..3]
+    w.makeTile i, j
+for i in [-3..3]
+  for j in [-3..3]
+    w.connectTiles i, j, i - 1, j
+    w.connectTiles i, j, i + 1, j
+    w.connectTiles i, j, i, j - 1
+    w.connectTiles i, j, i, j + 1
 
 p = new graph.Graph()
 players = {}
