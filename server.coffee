@@ -62,8 +62,8 @@ io.sockets.on 'connection', (socket) ->
   x = -1
   y = -1
   while w.map.get(x, y) != w.CELL_ROOM or p.get(x, y)
-    x = Math.floor(Math.random() * 20) + 10
-    y = Math.floor(Math.random() * 20) + 10
+    x = Math.floor(Math.random() * 30)
+    y = Math.floor(Math.random() * 20)
   player =
     x: x
     y: y
