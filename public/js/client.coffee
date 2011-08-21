@@ -1,6 +1,8 @@
 log = () -> console?.log?(Array.prototype.slice.call(arguments))
 str = (x) -> JSON.stringify x
 
+BGCOLOR = 'black'
+
 SPRITE_SIZE = 16 # pixels
 SPRITE_BG = '#476c6c'
 spritemap = new Image()
@@ -39,7 +41,7 @@ $ ->
   canvas.width = document.width
   canvas.height = document.height
   ctx = canvas.getContext?('2d')
-  ctx.fillStyle = 'black'
+  ctx.fillStyle = BGCOLOR
   ctx.fillRect 0, 0, canvas.width, canvas.height
 
   v = new Viewport(canvas)
@@ -144,8 +146,24 @@ $ ->
         if vy > v.canvas.height - P
           ty = T
         if tx or ty
-          v.translate tx, ty
-          fullRedraw()
+          # Do a nice transition. Math is silly.
+          imageData = ctx.getImageData 0, 0, canvas.width, canvas.height
+          steps = 5
+          time = 100 # ms
+          dx = -tx * CELL_WIDTH / steps
+          dy = -ty * CELL_HEIGHT / steps
+          step = 0
+          animate = ->
+            step++
+            ctx.fillStyle = BGCOLOR
+            ctx.fillRect 0, 0, canvas.width, canvas.height
+            ctx.putImageData imageData, dx * step, dy * step
+            if step < steps
+              setTimeout animate, time / steps
+            else
+              v.translate tx, ty
+              fullRedraw()
+          animate()
     else
       fullRedraw()
   socket.on 'playerUpdate', onUpdate

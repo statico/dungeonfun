@@ -1,11 +1,12 @@
 (function() {
-  var CELL_HEIGHT, CELL_WIDTH, SCROLL_PADDING, SPRITE_BG, SPRITE_SIZE, Viewport, log, spritemap, str;
+  var BGCOLOR, CELL_HEIGHT, CELL_WIDTH, SCROLL_PADDING, SPRITE_BG, SPRITE_SIZE, Viewport, log, spritemap, str;
   log = function() {
     return typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log(Array.prototype.slice.call(arguments)) : void 0 : void 0;
   };
   str = function(x) {
     return JSON.stringify(x);
   };
+  BGCOLOR = 'black';
   SPRITE_SIZE = 16;
   SPRITE_BG = '#476c6c';
   spritemap = new Image();
@@ -45,7 +46,7 @@
     canvas.width = document.width;
     canvas.height = document.height;
     ctx = typeof canvas.getContext === "function" ? canvas.getContext('2d') : void 0;
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = BGCOLOR;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     v = new Viewport(canvas);
     w = new World();
@@ -150,7 +151,7 @@
       return fullRedraw();
     });
     onUpdate = function(p) {
-      var P, T, oldp, tx, ty, vx, vy;
+      var P, T, animate, dx, dy, imageData, oldp, step, steps, time, tx, ty, vx, vy;
       oldp = players[p.id];
       players[p.id] = p;
       if (oldp) {
@@ -160,7 +161,6 @@
           vy = v.yToCanvasY(p.y);
           P = SCROLL_PADDING;
           T = Math.floor(SCROLL_PADDING / CELL_WIDTH * 2);
-          log('SCROLL_PADDING=', P, 'T=', T, 'vx=', vx, 'vy=', vy);
           tx = ty = 0;
           if (vx < P) {
             tx = -T;
@@ -175,9 +175,25 @@
             ty = T;
           }
           if (tx || ty) {
-            v.translate(tx, ty);
-            log('translate', tx, ty, '->', v.l, v.t);
-            return fullRedraw();
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            steps = 5;
+            time = 100;
+            dx = -tx * CELL_WIDTH / steps;
+            dy = -ty * CELL_HEIGHT / steps;
+            step = 0;
+            animate = function() {
+              step++;
+              ctx.fillStyle = BGCOLOR;
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.putImageData(imageData, dx * step, dy * step);
+              if (step < steps) {
+                return setTimeout(animate, time / steps);
+              } else {
+                v.translate(tx, ty);
+                return fullRedraw();
+              }
+            };
+            return animate();
           }
         }
       } else {
