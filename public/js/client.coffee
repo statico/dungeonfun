@@ -38,9 +38,9 @@ $ ->
 
   body.css overflow: 'hidden'
   canvas = document.getElementById('canvas')
-  canvas.width = document.width
-  canvas.height = document.height
-  ctx = canvas.getContext?('2d')
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
+  ctx = canvas.getContext('2d')
   ctx.fillStyle = BGCOLOR
   ctx.fillRect 0, 0, canvas.width, canvas.height
 

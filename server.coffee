@@ -1,7 +1,5 @@
 log = () -> console?.log?(Array.prototype.slice.call(arguments))
 
-# test
-
 express = require 'express'
 world = require './public/js/world.coffee'
 graph = require './public/js/graph.coffee'
