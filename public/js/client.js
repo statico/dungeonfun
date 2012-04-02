@@ -250,6 +250,26 @@
           socket.emit('movePlayer', {
             direction: 'se'
           });
+          break;
+        case '%':
+          socket.emit('movePlayer', {
+            direction: 'w'
+          });
+          break;
+        case "'":
+          socket.emit('movePlayer', {
+            direction: 'e'
+          });
+          break;
+        case '(':
+          socket.emit('movePlayer', {
+            direction: 's'
+          });
+          break;
+        case '&':
+          socket.emit('movePlayer', {
+            direction: 'n'
+          });
       }
       if (!e.altKey && !e.ctrlKey && !e.metaKey) {
         return false;

@@ -186,6 +186,10 @@ $ ->
       when 'U' then socket.emit 'movePlayer', direction: 'ne'
       when 'B' then socket.emit 'movePlayer', direction: 'sw'
       when 'N' then socket.emit 'movePlayer', direction: 'se'
+      when '%' then socket.emit 'movePlayer', direction: 'w'
+      when "'" then socket.emit 'movePlayer', direction: 'e'
+      when '(' then socket.emit 'movePlayer', direction: 's'
+      when '&' then socket.emit 'movePlayer', direction: 'n'
     if not e.altKey and not e.ctrlKey and not e.metaKey
       return false
 
