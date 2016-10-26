@@ -157,6 +157,5 @@ class Graph
     return []
 
 
-
-exports or= this
+if not exports? then exports = this
 exports.Graph = Graph

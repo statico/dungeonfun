@@ -79,5 +79,5 @@ class BinaryHeap
       else
         break
 
-exports or= this
+if not exports? then exports = this
 exports.BinaryHeap = BinaryHeap

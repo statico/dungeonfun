@@ -280,5 +280,5 @@ class World
 
 
 
-exports or= this
+if not exports? then exports = this
 exports.World = World
