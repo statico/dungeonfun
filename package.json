@@ -1,10 +1,13 @@
 {
   "name": "nodefun",
   "version": "0.0.1",
+  "scripts": {
+    "start": "coffee server.coffee"
+  },
   "dependencies": {
+    "coffee-script": "1.12.7",
     "express": "2.4.5",
-    "socket.io": "0.7.9",
     "jade": "0.14.2",
-    "coffee-script": "1.1.2"
+    "socket.io": "0.7.9"
   }
 }
