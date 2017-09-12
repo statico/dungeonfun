@@ -13,12 +13,12 @@ Open in multiple tabs to see the astounding multiplayer capabilities 😭
 ## Getting Started
 
 - `npm install`
-- `coffee server.coffee`
-- Go to http://localhost:9000/
+- `npm run start`
+- Go to http://localhost:5000/
 
 ## Tech
 
-Note: This was made in mid-2013.
+Note: This was made in mid-2011.
 
 - CoffeeScript
 - Express
