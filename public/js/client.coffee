@@ -108,7 +108,7 @@ $ ->
     if oldx != null and oldy != null
       drawCell oldx, oldy, v.xToCanvasX(oldx), v.yToCanvasY(oldy)
 
-  socket = io.connect '/'
+  socket = io '/'
 
   socket.on 'connected', (socket) ->
     log 'connected', socket

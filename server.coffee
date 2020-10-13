@@ -1,5 +1,6 @@
 log = () -> console?.log?(Array.prototype.slice.call(arguments))
 
+http = require 'http'
 express = require 'express'
 world = require './public/js/world.coffee'
 graph = require './public/js/graph.coffee'
@@ -24,40 +25,26 @@ lastPlayerId = 0
 
 # EXPRESS -------------------------------------------------------------------
 
-app = express.createServer()
+app = express()
 
-app.configure ->
-  app.use express.logger()
-  app.use express.methodOverride()
-  app.use express.bodyParser()
-  app.use express.cookieParser()
-  app.use express.session
-    secret: 'b35$6dff0YC1694421##2a4$9)CE!bc0'
-  app.use app.router
-  app.use express.compiler
-    src: __dirname + '/public'
-    enable: ['sass', 'coffeescript']
-  app.use express.static __dirname + '/public'
-  app.use express.errorHandler
-    dumpExceptions: true
-    showStack: true
+app.use express.static './public'
 
-app.set 'views', __dirname + '/views'
+app.set 'views', './views'
+app.set 'view engine', 'pug'
 app.set 'view options',
   layout: false
 
 app.get '/', (req, res) ->
-  res.render 'main.jade',
+  res.render 'main.pug',
     title: 'nodefun'
     message: 'world'
 
 # SOCKET.IO -----------------------------------------------------------------
 
-io = socketio.listen app
-io.configure ->
-  io.set 'transports', ['xhr-polling']
+server = http.createServer app
+io = socketio.listen server
 
-io.sockets.on 'connection', (socket) ->
+io.on 'connection', (socket) ->
   # Find a empty coord for the new player
   x = -1
   y = -1
@@ -118,5 +105,5 @@ io.sockets.on 'connection', (socket) ->
 
 port = process.env.PORT or 5000
 log "Listening on http://127.0.0.1:#{port}/"
-app.listen port
+server.listen port
 

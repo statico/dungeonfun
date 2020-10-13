@@ -152,7 +152,7 @@
         return drawCell(oldx, oldy, v.xToCanvasX(oldx), v.yToCanvasY(oldy));
       }
     };
-    socket = io.connect('/');
+    socket = io('/');
     socket.on('connected', function(socket) {
       return log('connected', socket);
     });
